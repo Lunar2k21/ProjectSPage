@@ -32,11 +32,11 @@ const colorSets = [
 function preloadImages() {
   for (let i = 0; i < images.length; i++) {
     const img = new Image();
-    img.src = "../src/images/" + images[i];
+    img.src = "src/images/" + images[i];
   }
   for (let i = 0; i < backgrounds.length; i++) {
     const bg = new Image();
-    bg.src = "../src/bgs/" + backgrounds[i];
+    bg.src = "src/bgs/" + backgrounds[i];
   }
 }
 
@@ -49,7 +49,7 @@ function nextImage() {
   updateBackground(currentIndex);
 
   setTimeout(() => {
-    imageElement.src = "../src/images/" + images[currentIndex];
+    imageElement.src = "src/images/" + images[currentIndex];
     imageElement.style.opacity = 1;
   }, 200); // Match the transition duration in style.css
 }
@@ -64,7 +64,7 @@ function updateColors() {
 
 function updateBackground() {
   document.documentElement.style.backgroundImage =
-    "url('../src/bgs/" + backgrounds[currentIndex] + "')";
+    "url('src/bgs/" + backgrounds[currentIndex] + "')";
 }
 
 // Set colors with current index first
@@ -72,7 +72,7 @@ updateColors(currentIndex);
 
 // Set the initial image
 document.getElementById("carouselImage").src =
-  "../src/images/" + images[currentIndex];
+  "src/images/" + images[currentIndex];
 
 // Set the initial background
 updateBackground(currentIndex);
