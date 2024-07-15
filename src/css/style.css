@@ -19,7 +19,7 @@ img {
 
 html {
   background-color: var(--background-color);
-  background-image: url("../bgs/background1.svg");
+  background-image: url("bgs/background1.svg");
   background-repeat: no-repeat;
   background-position: center;
   overflow-x: hidden;
