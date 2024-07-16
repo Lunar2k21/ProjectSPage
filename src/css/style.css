@@ -173,6 +173,8 @@ ul li img {
 #bottom {
   text-align: center;
   margin-top: 20px;
+  grid-column: 1/-1;
+  display: grid;
 }
 
 #bottom a img {
