@@ -72,7 +72,7 @@ body {
 }
 
 #carouselImage {
-  height: 600px;
+  height: 400px;
   aspect-ratio: 16 / 9;
   border-radius: 6px;
   box-shadow: 0px 5px 15px 0px rgba(0, 0, 0, 0.5);
