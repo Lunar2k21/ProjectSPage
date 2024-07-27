@@ -56,14 +56,27 @@ body {
   object-fit: contain;
 }
 
-#text,
+#main-content {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
 #image {
+  margin-right: 1em;
+}
+
+#text {
+  display: flex;
+  flex-direction: column;
   opacity: 0;
   transition: opacity 0.2s ease-in;
 }
 
-#text.loaded,
-#image.loaded {
+#text.loaded {
   opacity: 1;
 }
 
@@ -77,10 +90,6 @@ body {
   border-radius: 6px;
   box-shadow: 0px 5px 15px 0px rgba(0, 0, 0, 0.5);
   object-fit: cover;
-}
-
-#image {
-  margin-right: 1em;
 }
 
 #carouselImage:hover {
@@ -156,10 +165,6 @@ a:hover {
 
 .fazzi .urls:nth-child(even) {
   padding-left: 1.5em;
-}
-
-#image {
-  padding-right: 1em;
 }
 
 ul li img {
