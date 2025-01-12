@@ -187,8 +187,8 @@ ul li img {
   height: auto;
 }
 #lang a img {
-  height: 25px;
-  aspect-ratio: 1 / 1;
+  height: 50px;
+  aspect-ratio: 2 / 1;
   border-radius: 3px;
   object-fit: cover;
   margin-right: 10px;
