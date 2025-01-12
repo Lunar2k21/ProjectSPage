@@ -115,7 +115,7 @@ body {
   display: grid;
 }
 
-#ending {
+#ending, #lang {
   color: var(--accent-color-2);
   font-size: 1.5em;
   font-weight: 900;
