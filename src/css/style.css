@@ -179,18 +179,25 @@ ul li img {
   text-align: center;
   margin-top: 20px;
   grid-column: 1/-1;
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#bottom #lang-container {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 #bottom a img {
   max-width: 100%;
   height: auto;
 }
+
 #lang a img {
   height: 50px;
   aspect-ratio: 2 / 1;
   border-radius: 3px;
   object-fit: cover;
-  margin-right: 10px;
-  display: grid;
 }
