@@ -115,7 +115,7 @@ body {
   display: grid;
 }
 
-#ending {
+#ending,lang {
   color: var(--accent-color-2);
   font-size: 1.5em;
   font-weight: 900;
@@ -185,4 +185,11 @@ ul li img {
 #bottom a img {
   max-width: 100%;
   height: auto;
+}
+#lang a img {
+  height: 25px;
+  aspect-ratio: 1 / 1;
+  border-radius: 3px;
+  object-fit: cover;
+  margin-right: 10px;
 }
