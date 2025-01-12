@@ -3,7 +3,7 @@ let currentIndex =
   document.currentScript.getAttribute("currentIndex");
 currentIndex = parseInt(currentIndex);
 
-const images = ["cover1.png", "cover2.png", "cover3.png"];
+const images = ["cover1.jpg", "cover2.jpg", "cover3.jpg"];
 const backgrounds = ["background1.svg", "background2.svg", "background3.svg"];
 const colorSets = [
   {
