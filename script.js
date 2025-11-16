@@ -315,7 +315,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     let currentWorkbook = null;
     
     // Load main file on page load
-    loadExcelFile('data/results.xlsx');
+    loadExcelFile('data/secondary.xlsx');
 
     // Contest Selector
     const contestButtons = document.querySelectorAll('.contest-btn');
