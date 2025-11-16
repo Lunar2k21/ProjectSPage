@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+    
+    <!-- Main page - Polish -->
+    <url>
+        <loc>https://projectsimracing.pl/</loc>
+        <lastmod>2024-01-01</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1.0</priority>
+        <xhtml:link rel="alternate" hreflang="pl" href="https://projectsimracing.pl/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://projectsimracing.pl/?lang=en"/>
+    </url>
+    
+    <!-- Main page - English -->
+    <url>
+        <loc>https://projectsimracing.pl/?lang=en</loc>
+        <lastmod>2024-01-01</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.9</priority>
+        <xhtml:link rel="alternate" hreflang="pl" href="https://projectsimracing.pl/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://projectsimracing.pl/?lang=en"/>
+    </url>
+    
+</urlset>

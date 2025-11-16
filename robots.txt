@@ -1,0 +1,27 @@
+# robots.txt for projectsimracing.pl
+
+User-agent: *
+Allow: /
+Disallow: /data/
+
+# Sitemap location
+Sitemap: https://projectsimracing.pl/sitemap.xml
+
+# Crawl-delay (optional, helps prevent server overload)
+Crawl-delay: 1
+
+# Allow specific important pages
+Allow: /index.html
+Allow: /images/
+Allow: /styles.css
+Allow: /script.js
+
+# Common search engine bots
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /

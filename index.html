@@ -1,75 +1,227 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <title>Project Simracing - Liga skupiająca się wokół gry EA Sports WRC</title>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link href="src/css/style.css" rel="stylesheet" />
-  </head>
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Primary Meta Tags -->
+    <title>Project Simracing - Polska Liga Rajdów Samochodowych | EA Sports WRC & Assetto Corsa Rally</title>
+    <meta name="title" content="Project Simracing - Polska Liga Rajdów Samochodowych">
+    <meta name="description" content="Project Simracing to polska liga rajdów samochodowych w EA Sports WRC i Assetto Corsa Rally. Dołącz do społeczności simracingu, rywalizuj w ligach i śledź wyniki na żywo.">
+    <meta name="keywords" content="simracing, rajdy, EA Sports WRC, Assetto Corsa Rally, polska liga, racing, wyścigi, motorsport, simracing polska, wirtualne rajdy">
+    <meta name="author" content="Project Simracing">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="Polish">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://projectsimracing.pl/">
+    <meta property="og:title" content="Project Simracing - Polska Liga Rajdów Samochodowych">
+    <meta property="og:description" content="Polska liga rajdów samochodowych w EA Sports WRC i Assetto Corsa Rally. Dołącz do rywalizacji!">
+    <meta property="og:image" content="https://projectsimracing.pl/images/logo.png">
+    <meta property="og:locale" content="pl_PL">
+    <meta property="og:locale:alternate" content="en_US">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://projectsimracing.pl/">
+    <meta property="twitter:title" content="Project Simracing - Polska Liga Rajdów">
+    <meta property="twitter:description" content="Polska liga rajdów samochodowych w EA Sports WRC i Assetto Corsa Rally.">
+    <meta property="twitter:image" content="https://projectsimracing.pl/images/logo.png">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://projectsimracing.pl/">
+    
+    <!-- Alternate Language Versions -->
+    <link rel="alternate" hreflang="pl" href="https://projectsimracing.pl/">
+    <link rel="alternate" hreflang="en" href="https://projectsimracing.pl/?lang=en">
+    <link rel="alternate" hreflang="x-default" href="https://projectsimracing.pl/">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
+    
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://www.youtube.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    
+    <!-- Schema.org structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SportsOrganization",
+      "name": "Project Simracing",
+      "description": "Polska liga rajdów samochodowych w EA Sports WRC i Assetto Corsa Rally",
+      "url": "https://projectsimracing.pl",
+      "logo": "https://projectsimracing.pl/images/logo.png",
+      "sameAs": [
+        "https://www.facebook.com/ProjectSimracing/",
+        "https://www.youtube.com/@ProjectSimracingpl",
+        "https://discord.gg/R3Tu68jWwK",
+        "https://patronite.pl/projectsimracing"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "Community Support",
+        "url": "https://discord.gg/R3Tu68jWwK"
+      }
+    }
+    </script>
+</head>
+<body data-theme="dark">
+    <!--Zmiana Motywu-->
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+        <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
+    
+    <!--Strona Główna Góra-->
+    <section class="main-section">
+        <div class="container">
+            <!--Lewa Strona ze sliderem-->
+            <div class="image-container">
+                <div class="slider" role="img" aria-label="Rally car slideshow">
+                    <!-- Images will be loaded dynamically from images/slide*.* -->
+                </div>
+                <div class="image-blur-bg"></div>
+            </div>
 
-  <body class="home">
-    <div id="header">
-      <img id="logo" src="src/images/logo.png" alt="Project S" />
-    </div>
-    <div id="main-content">
-      <div id="image" onclick="nextImage(currentIndex),nextBackground(currentIndex)">
-        <img id="carouselImage" src="src/images/cover2.jpg" />
-        <script async src="src/js/theme.js" currentIndex="2"></script>
-      </div>
-      <div id="text">
-        <div id="greeting">Project Simracing</div>
-        <div id="date"></div>
-        <script async src="src/js/date.js"></script>
-        <div id="links">
-          <div class="urls">
-            <div class="header">Społeczność</div>
-            <ul>
-              <li><img src="src/images/2.png" alt="Discord"><a href="https://discord.gg/R3Tu68jWwK">Discord</a></li>
-              <li><img src="src/images/3.png" alt="Facebook"><a href="https://www.facebook.com/ProjectSimracing/">Profil Facebook</a></li>
-              <li><img src="src/images/5.png" alt="Youtube"><a href="https://www.youtube.com/channel/UCpjDcxwIfcoN5exRmAd6SYw">Kanał Youtube</a></li>
-            </ul>
-          </div>
-          <div class="urls">
-            <div class="header">Liga EA Sports WRC</div>
-            <ul>
-              <li><img src="src/images/1.png" alt="Racenet"><a href="https://racenet.com/ea_sports_wrc/clubs/3358">Klub EA Racenet</a></li>
-              <li><img src="src/images/6.png" alt="Wyniki"><a href="https://docs.google.com/spreadsheets/d/1e9YL9dr1fkIDtHQcXKaFMdY9bpaUDgtB4uFrO_Noogc/edit?usp=sharing">Tabela Wyników</a></li>
-              <li><img src="src/images/7.png" alt="Formularz zgłoszeniowy"><a href="https://forms.gle/djYKmgeQmg75uitF9">Formularz zgłoszeniowy</a></li>
-            </ul>
-          </div>
-          <div class="urls">
-            <div class="header">Assetto Corsa Rally</div>
-            <ul>
-              <li><img src="src/images/4.png" alt="Grupa"><a href="https://www.facebook.com/groups/1885078062424849/?ref=share">Grupa Facebook</a></li>
-              <li><img src="src/images/2.png" alt="Discord"><a href="https://discord.gg/R3Tu68jWwK">Discord</a></li>
-              <li><a href="">Liga Assetto Corsa Rally (wkrótce)</a></li>
-            </ul>
-          </div>
-         <div id="bottom">
-  <div id="ending">
-    <a href="https://patronite.pl/projectsimracing" target="_blank">
-      <img src="https://cdn.patronite.pl/widget/buttons/dark/button-dark.svg" alt="Wspieraj Autora na Patronite">
-    </a>
-  </div>
-  <div id="lang-container">
-    <div id="lang">
-      <a href="https://projectsimracing.pl/" target="_blank">
-        <img src="src/images/pl.svg" alt="Polska wersja strony">
-      </a>
-    </div>
-    <div id="lang">
-      <a href="https://projectsimracing.pl/english" target="_blank">
-        <img src="src/images/en.svg" alt="English page version">
-      </a>
-    </div>
-  </div>
-</div>
+            <!--Prawa Strona kontent-->
+            <div class="content-container">
+                <!--Logo-->
+                <div class="logo-section">
+                    <img src="images/logo.png" alt="Project Simracing Logo" class="logo">
+                </div>
+
+                <!--Linki-->
+                <nav class="links-grid" aria-label="Main navigation">
+                    <!--Kolumna 1-->
+                    <div class="column">
+                        <h3 class="column-title">Społeczność</h3>
+                        <a href="https://discord.gg/R3Tu68jWwK" class="link-box" rel="noopener" target="_blank">Discord</a>
+                        <a href="https://www.facebook.com/ProjectSimracing/" class="link-box" rel="noopener" target="_blank">Profil Facebook</a>
+                        <a href="https://www.youtube.com/@ProjectSimracingpl" class="link-box" rel="noopener" target="_blank">Kanał Youtube</a>
+                    </div>
+
+                     <!--Kolumna 2-->
+                    <div class="column">
+                        <h3 class="column-title">Liga EA Sports WRC</h3>
+                        <a href="https://racenet.com/ea_sports_wrc/clubs/3358" class="link-box" rel="noopener" target="_blank">Klub EA Racenet</a>
+                        <a href="https://docs.google.com/spreadsheets/d/1e9YL9dr1fkIDtHQcXKaFMdY9bpaUDgtB4uFrO_Noogc/edit?usp=sharing" class="link-box" rel="noopener" target="_blank">Arkusz Wyników</a>
+                        <a href="https://forms.gle/djYKmgeQmg75uitF9" class="link-box" rel="noopener" target="_blank">Formularz zgłoszeniowy</a>
+                    </div>
+
+                     <!--Kolumna 3-->
+                    <div class="column">
+                        <h3 class="column-title">Assetto Corsa Rally</h3>
+                        <a href="https://www.facebook.com/groups/1885078062424849/?ref=share" class="link-box" rel="noopener" target="_blank">Grupa Facebook</a>
+                        <a href="#" class="link-box" aria-disabled="true">Liga Assetto Corsa Rally (wkrótce)</a>
+                    </div>
+                </nav>
+
+                <!--Dolne Linki-->
+                <div class="bottom-links">
+                    <a href="https://patronite.pl/projectsimracing" class="patronite-link" target="_blank" rel="noopener">
+                        <svg viewBox="0 0 24 24" class="flame-icon" aria-hidden="true">
+                            <path d="M12 2C12 2 7 6 7 12C7 15.31 9.69 18 13 18C16.31 18 19 15.31 19 12C19 9 17 7 17 7C17 7 17.5 9 16 10.5C16 10.5 15 8 13 8C13 8 14 10 14 12C14 13.1 13.1 14 12 14C10.9 14 10 13.1 10 12C10 10 12 8 12 8C12 8 9 9 9 12C9 14.21 10.79 16 13 16C15.21 16 17 14.21 17 12C17 8 12 2 12 2Z"/>
+                        </svg>
+                        Wspieraj na Patronite.pl
+                    </a>
+                    <a href="#results-section" class="scroll-down-link">↓ Wyniki/Media ↓</a>
+                    <div class="language-selector" role="navigation" aria-label="Language selector">
+                        <a href="#pl" class="lang-flag active" data-lang="pl" aria-label="Switch to Polish">
+                            <img src="images/flag-pl.png" alt="Polski" width="55" height="38">
+                        </a>
+                        <a href="#en" class="lang-flag" data-lang="en" aria-label="Switch to English">
+                            <img src="images/flag-en.png" alt="English" width="55" height="38">
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  </body>
+    </section>
+
+    <!--Strona Głowna Dół-->
+    <section class="second-section" id="results-section">
+        <div class="background-overlay-wrapper">
+            <div class="background-overlay"></div>
+        </div>
+        <div class="second-content">
+            <h2>Najnowsze treści</h2>
+            
+            <!--Przyciski do zmiany mediów-->
+            <div class="media-switcher" role="tablist" aria-label="Media type selector">
+                <button class="switch-btn active" data-target="video-content" role="tab" aria-selected="true" aria-controls="video-content">Video</button>
+                <button class="switch-btn" data-target="images-content" role="tab" aria-selected="false" aria-controls="images-content">Galeria</button>
+            </div>
+
+            <!--Wideo-->
+            <div id="video-content" class="media-content active" role="tabpanel" aria-labelledby="video-tab">
+                <div class="video-container">
+                    <iframe 
+                        src="https://www.youtube.com/embed/videoseries?list=UUpjDcxwIfcoN5exRmAd6SYw" 
+                        title="Project Simracing YouTube videos" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen
+                        loading="lazy">
+                    </iframe>
+                </div>
+            </div>
+
+            <!--Obrazy zawartość-->
+            <div id="images-content" class="media-content" role="tabpanel" aria-labelledby="gallery-tab">
+                <div class="gallery-grid" role="list" aria-label="Rally image gallery">
+                    <!-- Images will be loaded dynamically from images/gallery*.* -->
+                </div>
+            </div>
+
+            <!--Modal-->
+            <div id="imageModal" class="modal" role="dialog" aria-modal="true" aria-label="Image viewer">
+                <span class="modal-close" onclick="closeImageModal()" role="button" aria-label="Close image viewer">&times;</span>
+                <img class="modal-content" id="modalImage" alt="Full size rally image">
+            </div>
+
+            <!--Wyniki-->
+            <article class="results-section">
+                <h3>Tabela Wyników</h3>
+                
+                <!--Wybór sezonu-->
+                <div class="contest-selector" id="contestSelector" role="navigation" aria-label="Season selector">
+                    <button class="contest-btn active" data-file="data/secondary.xlsx">Sezon 13.</button>
+                    <button class="contest-btn" data-file="data/results.xlsx">PaTera Cup</button>
+                </div>
+                
+                <!--Wybór arkusza-->
+                <div class="sheet-selector" id="sheetSelector" role="navigation" aria-label="Sheet selector">
+                    <!--Przyciski odpowienio generowane-->
+                </div>
+                
+                <div id="resultsTable" class="results-table-container" role="region" aria-live="polite" aria-label="Results table">
+                    <p class="loading-text">Ładowanie wyników...</p>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <!--SheetJS-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="script.js"></script>
+</body>
 </html>
-
-
-
-
