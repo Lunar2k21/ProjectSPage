@@ -19,7 +19,7 @@ const translations = {
         videoBtn: "Video",
         galleryBtn: "Galeria",
         resultsTable: "Tabela Wyników",
-        season13: "Liga Główna.",
+        season13: "Liga Główna",
         pateraCup: "PaTera Cup",
         loadingResults: "Ładowanie wyników...",
         noFile: "Nie można załadować wyników z Google Sheets.",
