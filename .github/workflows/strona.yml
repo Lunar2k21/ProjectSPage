@@ -1,0 +1,50 @@
+# Buduje stronę z plików w tresci/ i publikuje ją na GitHub Pages.
+# Żeby zadziałało, w ustawieniach repozytorium (Settings → Pages)
+# źródłem publikacji musi być „GitHub Actions", a nie gałąź.
+
+name: Budowanie i publikacja strony
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:          # przycisk „Run workflow" w zakładce Actions
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  buduj:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Biblioteka do obrazów
+        run: pip install --quiet pillow
+
+      - name: Składanie strony
+        run: python3 narzedzia/buduj.py --out _site
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  publikuj:
+    needs: buduj
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.publikacja.outputs.page_url }}
+    steps:
+      - id: publikacja
+        uses: actions/deploy-pages@v4
