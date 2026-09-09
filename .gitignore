@@ -1,0 +1,7 @@
+_site/
+/artykuly/
+/regulamin/
+/sitemap.xml
+/assets/js/kalendarz.js
+__pycache__/
+.DS_Store
