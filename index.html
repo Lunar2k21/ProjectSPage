@@ -1,236 +1,246 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="pl" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- Primary Meta Tags -->
-    <title>Project Simracing - Polska Liga Rajdów Samochodowych | EA Sports WRC & Assetto Corsa Rally</title>
-    <meta name="title" content="Project Simracing - Polska Liga Rajdów Samochodowych">
-    <meta name="description" content="Project Simracing to polska liga rajdów samochodowych w EA Sports WRC i Assetto Corsa Rally. Dołącz do społeczności simracingu, rywalizuj w ligach i śledź wyniki na żywo.">
-    <meta name="keywords" content="simracing, rajdy, EA Sports WRC, Assetto Corsa Rally, polska liga, racing, wyścigi, motorsport, simracing polska, wirtualne rajdy">
-    <meta name="author" content="Project Simracing">
-    <meta name="robots" content="index, follow">
-    <meta name="language" content="Polish">
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://projectsimracing.pl/">
-    <meta property="og:title" content="Project Simracing - Polska Liga Rajdów Samochodowych">
-    <meta property="og:description" content="Polska liga rajdów samochodowych w EA Sports WRC i Assetto Corsa Rally. Dołącz do rywalizacji!">
-    <meta property="og:image" content="https://projectsimracing.pl/images/logo.png">
-    <meta property="og:locale" content="pl_PL">
-    <meta property="og:locale:alternate" content="en_US">
-    
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://projectsimracing.pl/">
-    <meta property="twitter:title" content="Project Simracing - Polska Liga Rajdów">
-    <meta property="twitter:description" content="Polska liga rajdów samochodowych w EA Sports WRC i Assetto Corsa Rally.">
-    <meta property="twitter:image" content="https://projectsimracing.pl/images/logo.png">
-    
-    <!-- Canonical URL -->
-    <link rel="canonical" href="https://projectsimracing.pl/">
-    
-    <!-- Alternate Language Versions -->
-    <link rel="alternate" hreflang="pl" href="https://projectsimracing.pl/">
-    <link rel="alternate" hreflang="en" href="https://projectsimracing.pl/?lang=en">
-    <link rel="alternate" hreflang="x-default" href="https://projectsimracing.pl/">
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
-    
-    <!-- Stylesheet -->
-    <link rel="stylesheet" href="styles.css">
-    
-    <!-- Preconnect to external domains -->
-    <link rel="preconnect" href="https://www.youtube.com">
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-    <link rel="preconnect" href="https://docs.google.com">
-    
-    <!-- Schema.org structured data -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "SportsOrganization",
-      "name": "Project Simracing",
-      "description": "Polska liga rajdów samochodowych w EA Sports WRC i Assetto Corsa Rally",
-      "url": "https://projectsimracing.pl",
-      "logo": "https://projectsimracing.pl/images/logo.png",
-      "sameAs": [
-        "https://www.facebook.com/ProjectSimracing/",
-        "https://www.youtube.com/@ProjectSimracingpl",
-        "https://discord.gg/R3Tu68jWwK",
-        "https://patronite.pl/projectsimracing"
-      ],
-      "contactPoint": {
-        "@type": "ContactPoint",
-        "contactType": "Community Support",
-        "url": "https://discord.gg/R3Tu68jWwK"
-      }
-    }
-    </script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+
+<title>Project Simracing — polska liga simracingowa | EA Sports WRC, Le Mans Ultimate</title>
+<meta name="description" content="Project Simracing to polska liga simracingowa: rajdy w EA Sports WRC i Assetto Corsa Rally, wyścigi długodystansowe w Le Mans Ultimate. Zapisy, wyniki na żywo i społeczność na Discordzie.">
+<meta name="author" content="Project Simracing">
+<link rel="canonical" href="https://projectsimracing.pl/">
+<link rel="alternate" hreflang="pl" href="https://projectsimracing.pl/">
+<link rel="alternate" hreflang="en" href="https://projectsimracing.pl/?lang=en">
+<link rel="alternate" hreflang="x-default" href="https://projectsimracing.pl/">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Project Simracing">
+<meta property="og:url" content="https://projectsimracing.pl/">
+<meta property="og:title" content="Project Simracing — polska liga simracingowa">
+<meta property="og:description" content="Rajdy w EA Sports WRC, wyścigi w Le Mans Ultimate. Zapisy, wyniki na żywo, społeczność.">
+<meta property="og:image" content="https://projectsimracing.pl/assets/img/hero/wrc-1920.webp">
+<meta property="og:locale" content="pl_PL">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/brand/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/img/brand/favicon-16.png">
+<link rel="apple-touch-icon" href="assets/img/brand/apple-touch-icon.png">
+
+<!-- Nagłówki i tekst widoczny od razu; reszta krojów dojeżdża sama. -->
+<link rel="preload" as="font" type="font/woff2" crossorigin
+      href="assets/fonts/saira-condensed-800.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin
+      href="assets/fonts/barlow-400.woff2">
+<link rel="stylesheet" href="assets/css/style.css">
+<!-- Pierwsze zdjęcie bohatera decyduje o tym, kiedy strona wygląda na gotową. -->
+<link rel="preload" as="image" href="assets/img/hero/wrc-1920.webp"
+      imagesrcset="assets/img/hero/wrc-1280.webp 1280w, assets/img/hero/wrc-1920.webp 1920w, assets/img/hero/wrc-2560.webp 2560w"
+      imagesizes="100vw" fetchpriority="high">
+<link rel="preload" as="image" href="assets/img/hero/wrc-1920.webp" imagesrcset="assets/img/hero/wrc-1280.webp 1280w, assets/img/hero/wrc-1920.webp 1920w, assets/img/hero/wrc-2560.webp 2560w" imagesizes="100vw">
+
+<script>
+/* Motyw ustawiany przed pierwszym malowaniem — bez tego widać mignięcie. */
+(function(){try{var t=localStorage.getItem('ps-theme');
+if(!t)t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
+document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+</script>
+
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"SportsOrganization",
+  "name":"Project Simracing",
+  "description":"Polska liga simracingowa — EA Sports WRC, Le Mans Ultimate, Assetto Corsa Rally",
+  "url":"https://projectsimracing.pl",
+  "logo":"https://projectsimracing.pl/assets/img/brand/logo.png",
+  "sameAs":[
+    "https://www.facebook.com/ProjectSimracing/",
+    "https://www.youtube.com/@ProjectSimracingpl",
+    "https://discord.gg/R3Tu68jWwK",
+    "https://patronite.pl/projectsimracing"
+  ]
+}
+</script>
 </head>
-<body data-theme="dark">
-    <!--Zmiana Motywu-->
-    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-        <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="5"></circle>
-            <line x1="12" y1="1" x2="12" y2="3"></line>
-            <line x1="12" y1="21" x2="12" y2="23"></line>
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-            <line x1="1" y1="12" x2="3" y2="12"></line>
-            <line x1="21" y1="12" x2="23" y2="12"></line>
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-        </svg>
-        <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-        </svg>
-    </button>
-    
-    <!--Strona Główna Góra-->
-    <section class="main-section">
-        <div class="container">
-            <!--Lewa Strona ze sliderem-->
-            <div class="image-container">
-                <div class="slider" role="img" aria-label="Rally car slideshow">
-                    <!-- Images will be loaded dynamically from images/slide*.* -->
-                </div>
-                <div class="image-blur-bg"></div>
-            </div>
 
-            <!--Prawa Strona kontent-->
-            <div class="content-container">
-                <!--Logo-->
-                <div class="logo-section">
-                    <img src="images/logo.png" alt="Project Simracing Logo" class="logo">
-                </div>
+<body>
+<a class="skip" href="#main" data-i18n="skip">Przejdź do treści</a>
 
-                <!--Linki-->
-                <nav class="links-grid" aria-label="Main navigation">
-                    <!--Kolumna 1-->
-                    <div class="column">
-                        <h3 class="column-title">Społeczność</h3>
-                        <a href="https://discord.gg/R3Tu68jWwK" class="link-box" rel="noopener" target="_blank">Discord</a>
-                        <a href="https://www.facebook.com/ProjectSimracing/" class="link-box" rel="noopener" target="_blank">Profil Facebook</a>
-                        <a href="https://www.youtube.com/@ProjectSimracingpl" class="link-box" rel="noopener" target="_blank">Kanał Youtube</a>
-                    </div>
+<!-- ======================= PASEK GÓRNY ======================= -->
+<header class="topbar" id="topbar">
+  <div class="shell topbar__in">
+    <a class="brand" href="/" aria-label="Project Simracing — strona główna">
+      <picture>
+        <source srcset="assets/img/brand/logo.webp" type="image/webp">
+        <img src="assets/img/brand/logo.png" width="2500" height="236" alt="Project Simracing">
+      </picture>
+    </a>
 
-                     <!--Kolumna 2-->
-                    <div class="column">
-                        <h3 class="column-title">Liga EA Sports WRC</h3>
-                        <a href="https://racenet.com/ea_sports_wrc/clubs/3358" class="link-box" rel="noopener" target="_blank">Klub EA Racenet</a>
-                        <a href="https://docs.google.com/spreadsheets/d/1fLWQQbc7HStSIGq3NQbhQQgR-bZWzC19oCcl4MD0iA8/edit?gid=1112116381#gid=1112116381" class="link-box" rel="noopener" target="_blank">Arkusz Wyników</a>
-                        <a href="https://forms.gle/djYKmgeQmg75uitF9" class="link-box" rel="noopener" target="_blank">Formularz zgłoszeniowy</a>
-                    </div>
+    <nav class="nav" id="navMain" aria-label="Nawigacja główna">
+      <a href="#hub">Odnośniki</a>
+      <a href="#wyniki">Wyniki</a>
+      <a href="#media">Media</a>
+    </nav>
 
-                     <!--Kolumna 3-->
-                    <div class="column">
-                        <h3 class="column-title">Assetto Corsa Rally</h3>
-                        <a href="https://www.facebook.com/groups/1885078062424849/?ref=share" class="link-box" rel="noopener" target="_blank">Grupa Facebook</a>
-                        <a href="#" class="link-box" aria-disabled="true">Liga Assetto Corsa Rally (wkrótce)</a>
-                    </div>
+    <div class="topbar__tools">
+      <div class="seg" role="group" aria-label="Język">
+        <button type="button" class="seg__btn is-on" data-lang="pl" aria-pressed="true">PL</button>
+        <button type="button" class="seg__btn" data-lang="en" aria-pressed="false">EN</button>
+      </div>
 
-                     <!--Kolumna 4-->
-                    <div class="column">
-                        <h3 class="column-title">Le Mans Ultimate</h3>
-                        <a href="https://www.thesimgrid.com/communities/project-simracing" class="link-box" rel="noopener" target="_blank">Profil Społeczności</a>
-                        <a href="https://www.thesimgrid.com/championships/22373" class="link-box" rel="noopener" target="_blank">Aktualny Sezon</a>
-                        <a href="https://www.thesimgrid.com/championships/22373/standings" class="link-box" rel="noopener" target="_blank">Wyniki</a>
-                    </div>
-                </nav>
+      <button type="button" class="icobtn" id="themeBtn" aria-label="Przełącz motyw" title="Przełącz motyw">
+        <svg class="ico-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.6"/><path d="M12 1.6v3M12 19.4v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1.6 12h3M19.4 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+        <svg class="ico-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
 
-                <!--Dolne Linki-->
-                <div class="bottom-links">
-                    <a href="https://patronite.pl/projectsimracing" class="patronite-link" target="_blank" rel="noopener">
-                        <svg viewBox="0 0 24 24" class="flame-icon" aria-hidden="true">
-                            <path d="M12 2C12 2 7 6 7 12C7 15.31 9.69 18 13 18C16.31 18 19 15.31 19 12C19 9 17 7 17 7C17 7 17.5 9 16 10.5C16 10.5 15 8 13 8C13 8 14 10 14 12C14 13.1 13.1 14 12 14C10.9 14 10 13.1 10 12C10 10 12 8 12 8C12 8 9 9 9 12C9 14.21 10.79 16 13 16C15.21 16 17 14.21 17 12C17 8 12 2 12 2Z"/>
-                        </svg>
-                        Wspieraj na Patronite.pl
-                    </a>
-                    <a href="#results-section" class="scroll-down-link">↓ Wyniki WRC/Media ↓</a>
-                    <div class="language-selector" role="navigation" aria-label="Language selector">
-                        <a href="#pl" class="lang-flag active" data-lang="pl" aria-label="Switch to Polish">
-                            <img src="images/flag-pl.png" alt="Polski" width="55" height="38">
-                        </a>
-                        <a href="#en" class="lang-flag" data-lang="en" aria-label="Switch to English">
-                            <img src="images/flag-en.png" alt="English" width="55" height="38">
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+      <a class="btn btn--primary topbar__cta" href="https://discord.gg/R3Tu68jWwK" target="_blank" rel="noopener">Discord</a>
 
-    <!--Strona Głowna Dół-->
-    <section class="second-section" id="results-section">
-        <div class="background-overlay-wrapper">
-            <div class="background-overlay"></div>
-        </div>
-        <div class="second-content">
-            <h2>Najnowsze treści</h2>
-            
-            <!--Przyciski do zmiany mediów-->
-            <div class="media-switcher" role="tablist" aria-label="Media type selector">
-                <button class="switch-btn active" data-target="video-content" role="tab" aria-selected="true" aria-controls="video-content">Video</button>
-                <button class="switch-btn" data-target="images-content" role="tab" aria-selected="false" aria-controls="images-content">Galeria</button>
-            </div>
+      <button type="button" class="icobtn burger" id="burger" aria-label="Menu" aria-expanded="false" aria-controls="mobnav">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+    </div>
+  </div>
+  <nav class="mobnav" id="mobnav" aria-label="Nawigacja mobilna" hidden></nav>
+</header>
 
-            <!--Wideo-->
-            <div id="video-content" class="media-content active" role="tabpanel" aria-labelledby="video-tab">
-                <div class="video-container">
-                    <iframe 
-                        src="https://www.youtube.com/embed/videoseries?list=UUpjDcxwIfcoN5exRmAd6SYw" 
-                        title="Project Simracing YouTube videos" 
-                        frameborder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        allowfullscreen
-                        loading="lazy">
-                    </iframe>
-                </div>
-            </div>
+<main id="main">
 
-            <!--Obrazy zawartość-->
-            <div id="images-content" class="media-content" role="tabpanel" aria-labelledby="gallery-tab">
-                <div class="gallery-grid" role="list" aria-label="Rally image gallery">
-                    <!-- Images will be loaded dynamically from images/gallery*.* -->
-                </div>
-            </div>
+<!-- ======================= HERO / SLAJDY SEZONOWE ======================= -->
+<section class="hero" id="hero" aria-roledescription="carousel" aria-label="Mistrzostwa Project Simracing">
+  <div class="hero__media" aria-hidden="true">
+    <div class="hero__frame is-on">
+      <img class="hero__img"
+           src="assets/img/hero/wrc-1920.webp"
+           srcset="assets/img/hero/wrc-1280.webp 1280w, assets/img/hero/wrc-1920.webp 1920w, assets/img/hero/wrc-2560.webp 2560w"
+           sizes="100vw" alt="" fetchpriority="high" decoding="async">
+    </div>
+  </div>
 
-            <!--Modal-->
-            <div id="imageModal" class="modal" role="dialog" aria-modal="true" aria-label="Image viewer">
-                <span class="modal-close" onclick="closeImageModal()" role="button" aria-label="Close image viewer">&times;</span>
-                <img class="modal-content" id="modalImage" alt="Full size rally image">
-            </div>
+  <div class="shell hero__in">
+    <h1 class="hero__brandline">
+      <span data-i18n="hero.brandline">Project Simracing — polska liga simracingowa</span>
+    </h1>
 
-            <!--Wyniki-->
-            <article class="results-section">
-                <h3>Tabela Wyników</h3>
-                
-                <!--Wybór sezonu-->
-                <div class="contest-selector" id="contestSelector" role="navigation" aria-label="Season selector">
-                    <button class="contest-btn active" data-file="https://docs.google.com/spreadsheets/d/1fLWQQbc7HStSIGq3NQbhQQgR-bZWzC19oCcl4MD0iA8/export?format=xlsx">Liga Główna</button>
-                    <button class="contest-btn" data-file="https://docs.google.com/spreadsheets/d/1pGvxn34zZI2kEOICBo83mv6CaXvOiHU5hYevYz4ub5E/export?format=xlsx">PaTera Cup</button>
-                </div>
-                
-                <!--Wybór arkusza-->
-                <div class="sheet-selector" id="sheetSelector" role="navigation" aria-label="Sheet selector">
-                    <!--Przyciski odpowienio generowane-->
-                </div>
-                
-                <div id="resultsTable" class="results-table-container" role="region" aria-live="polite" aria-label="Results table">
-                    <p class="loading-text">Ładowanie wyników...</p>
-                </div>
-            </article>
-        </div>
-    </section>
+    <div class="hero__slides" aria-live="polite">
+      <!-- Slajdy generuje app.js z config.js; poniżej stan wyjściowy dla przeglądarek bez JS. -->
+      <article class="slide is-on" data-slide="0">
+        <p class="slide__kick mono">EA Sports WRC · Sezon 15</p>
+        <h2 class="slide__title">Rajdy w czterech<br>dywizjach</h2>
+        <p class="slide__desc">Siedem rund, 182 kierowców, klasyfikacje od Rookie po PSR1.</p>
+        <p class="slide__cta">
+          <a class="btn btn--primary" href="https://forms.gle/djYKmgeQmg75uitF9" target="_blank" rel="noopener"><span class="btn__t">Zapisz się</span></a>
+          <a class="btn btn--ghost" href="#wyniki"><span class="btn__t">Wyniki sezonu</span></a>
+        </p>
+      </article>
+    </div>
 
-    <!--SheetJS-->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="script.js"></script>
+    <div class="hero__foot">
+      <div class="dots" role="tablist" aria-label="Wybór mistrzostw"></div>
+      <button type="button" class="playpause" id="playpause" aria-label="Wstrzymaj automatyczną zmianę">
+        <svg class="ico-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5v14M15 5v14"/></svg>
+        <svg class="ico-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <a class="scrollhint" href="#nextround" id="scrollhint">
+    <span class="mono" data-i18n="hero.scroll">Runda, odnośniki i wyniki</span>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+  </a>
+</section>
+
+<!-- ======================= PASEK NAJBLIŻSZEJ RUNDY ======================= -->
+<section class="nextround" id="nextround" aria-label="Najbliższa runda">
+  <div class="shell nextround__in">
+    <div class="nextround__what">
+      <p class="mono dim" id="nrKicker" data-i18n="next.kicker">Najbliższa runda</p>
+      <p class="nextround__name" id="nrName">—</p>
+      <p class="mono nextround__potem" id="nrPotem" hidden></p>
+    </div>
+    <div class="nextround__when">
+      <p class="mono dim" id="nrLabel" data-i18n="next.in">Start za</p>
+      <p class="nextround__clock" id="nrClock" aria-live="off">—</p>
+      <p class="mono dim" id="nrDate"></p>
+    </div>
+    <a class="btn btn--ghost btn--sm nextround__ics" id="nrIcs" href="#" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M3.5 9h17M4.5 5.5h15v15h-15z"/></svg>
+      <span class="btn__t">Dodaj do kalendarza</span>
+    </a>
+  </div>
+</section>
+
+<!-- ======================= HUB ODNOŚNIKÓW ======================= -->
+<section class="section" id="hub">
+  <div class="shell">
+    <header class="shead">
+      <h2 data-i18n="hub.title">Gdzie toczy się liga</h2>
+      <p class="mono dim" data-i18n="hub.sub">Wszystkie odnośniki w jednym miejscu</p>
+    </header>
+    <div class="cols" id="hubCols"><!-- generowane z config.js --></div>
+  </div>
+</section>
+
+<!-- ======================= WYNIKI: SKRÓT PODIUM ======================= -->
+<section class="section section--alt" id="wyniki">
+  <div class="shell">
+    <header class="shead shead--row">
+      <h2 data-i18n="pod.title">Podium ostatniej rundy</h2>
+      <span class="mono dim" id="podRound"></span>
+      <span class="live" id="liveTag" hidden><i aria-hidden="true"></i><span data-i18n="pod.live">Na żywo z arkusza</span></span>
+      <a class="more" href="wyniki.html" data-i18n="pod.more">Pełne wyniki →</a>
+    </header>
+    <p class="notice" id="demoNotice" hidden></p>
+    <div class="podium" id="podium"><!-- generowane z config.js --></div>
+  </div>
+</section>
+
+<!-- ======================= NAJNOWSZY ARTYKUŁ ======================= -->
+<section class="section" id="ostatni" hidden>
+  <div class="shell">
+    <header class="shead shead--row">
+      <h2 data-i18n="art.title">Najnowszy artykuł</h2>
+      <a class="more" href="artykuly/" data-i18n="art.more">Wszystkie artykuły →</a>
+    </header>
+    <div id="ostatniBox"></div>
+  </div>
+</section>
+
+<!-- ======================= MEDIA ======================= -->
+<section class="section" id="media">
+  <div class="shell">
+    <header class="shead shead--row">
+      <h2 data-i18n="media.title">Najnowsze materiały</h2>
+      <a class="more" href="https://www.youtube.com/@ProjectSimracingpl" target="_blank" rel="noopener" data-i18n="media.more">Kanał YouTube →</a>
+    </header>
+    <div class="videos" id="videos"><!-- generowane z config.js --></div>
+  </div>
+</section>
+
+</main>
+
+<!-- ======================= STOPKA ======================= -->
+<footer class="foot">
+  <div class="shell foot__in">
+    <picture class="foot__logo">
+      <source srcset="assets/img/brand/logo.webp" type="image/webp">
+      <img src="assets/img/brand/logo.png" width="2500" height="236" alt="Project Simracing">
+    </picture>
+    <p class="mono dim foot__copy">© <span id="year">2026</span> Project Simracing · projectsimracing.pl</p>
+    <nav class="foot__social" aria-label="Media społecznościowe">
+      <a href="https://discord.gg/R3Tu68jWwK" target="_blank" rel="noopener">Discord</a>
+      <a href="https://www.youtube.com/@ProjectSimracingpl" target="_blank" rel="noopener">YouTube</a>
+      <a href="https://www.facebook.com/ProjectSimracing/" target="_blank" rel="noopener">Facebook</a>
+      <a href="https://patronite.pl/projectsimracing" target="_blank" rel="noopener">Patronite</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="assets/js/config.js"></script>
+<script src="assets/js/kalendarz.js"></script>
+<script src="assets/js/zrodla.js"></script>
+<script src="assets/js/core.js"></script>
+<script src="assets/js/dane.js"></script>
+<script src="assets/js/app.js"></script>
 </body>
 </html>

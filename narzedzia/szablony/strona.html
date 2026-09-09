@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="dark" data-baza="{{B}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+
+<title>{{TYTUL}} — Project Simracing</title>
+<meta name="description" content="{{OPIS}}">
+<link rel="canonical" href="{{URL}}">
+<link rel="alternate" hreflang="pl" href="{{URL}}">
+<link rel="alternate" hreflang="en" href="{{URL}}?lang=en">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Project Simracing">
+<meta property="og:url" content="{{URL}}">
+<meta property="og:title" content="{{TYTUL}}">
+<meta property="og:description" content="{{OPIS}}">
+<meta property="og:image" content="{{OBRAZEK}}">
+<meta name="twitter:card" content="summary_large_image">
+{{JSONLD}}
+
+<link rel="icon" type="image/png" sizes="32x32" href="{{B}}assets/img/brand/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="{{B}}assets/img/brand/favicon-16.png">
+<link rel="apple-touch-icon" href="{{B}}assets/img/brand/apple-touch-icon.png">
+
+<!-- Nagłówki i tekst widoczny od razu; reszta krojów dojeżdża sama. -->
+<link rel="preload" as="font" type="font/woff2" crossorigin
+      href="{{B}}assets/fonts/saira-condensed-800.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin
+      href="{{B}}assets/fonts/barlow-400.woff2">
+<link rel="stylesheet" href="{{B}}assets/css/style.css">
+
+<script>
+(function(){try{var t=localStorage.getItem('ps-theme');
+if(!t)t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
+document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+</script>
+</head>
+
+<body {{BODY}}>
+<a class="skip" href="#main" data-i18n="skip">Przejdź do treści</a>
+
+<header class="topbar" id="topbar">
+  <div class="shell topbar__in">
+    <a class="brand" href="{{B}}index.html" aria-label="Project Simracing — strona główna">
+      <picture>
+        <source srcset="{{B}}assets/img/brand/logo.webp" type="image/webp">
+        <img src="{{B}}assets/img/brand/logo.png" width="2500" height="236" alt="Project Simracing">
+      </picture>
+    </a>
+
+    <nav class="nav" id="navMain" aria-label="Nawigacja główna">
+      <a href="{{B}}index.html#hub">Odnośniki</a>
+      <a href="{{B}}wyniki.html">Wyniki</a>
+      <a href="{{B}}kalendarz.html">Kalendarz</a>
+      <a href="{{B}}artykuly/">Artykuły</a>
+      <a href="{{B}}regulamin/">Regulamin</a>
+    </nav>
+
+    <div class="topbar__tools">
+      <div class="seg" role="group" aria-label="Język">
+        <button type="button" class="seg__btn is-on" data-lang="pl" aria-pressed="true">PL</button>
+        <button type="button" class="seg__btn" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <button type="button" class="icobtn" id="themeBtn" aria-label="Przełącz motyw" title="Przełącz motyw">
+        <svg class="ico-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.6"/><path d="M12 1.6v3M12 19.4v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1.6 12h3M19.4 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+        <svg class="ico-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+      <a class="btn btn--primary topbar__cta" href="https://discord.gg/R3Tu68jWwK" target="_blank" rel="noopener">Discord</a>
+      <button type="button" class="icobtn burger" id="burger" aria-label="Menu" aria-expanded="false" aria-controls="mobnav">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+    </div>
+  </div>
+  <nav class="mobnav" id="mobnav" aria-label="Nawigacja mobilna" hidden></nav>
+</header>
+
+{{TRESC}}
+
+<footer class="foot">
+  <div class="shell foot__in">
+    <picture class="foot__logo">
+      <source srcset="{{B}}assets/img/brand/logo.webp" type="image/webp">
+      <img src="{{B}}assets/img/brand/logo.png" width="2500" height="236" alt="Project Simracing">
+    </picture>
+    <p class="mono dim foot__copy">© <span id="year">2026</span> Project Simracing · projectsimracing.pl</p>
+    <nav class="foot__social" aria-label="Media społecznościowe">
+      <a href="https://discord.gg/R3Tu68jWwK" target="_blank" rel="noopener">Discord</a>
+      <a href="https://www.youtube.com/@ProjectSimracingpl" target="_blank" rel="noopener">YouTube</a>
+      <a href="https://www.facebook.com/ProjectSimracing/" target="_blank" rel="noopener">Facebook</a>
+      <a href="https://patronite.pl/projectsimracing" target="_blank" rel="noopener">Patronite</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="{{B}}assets/js/config.js"></script>
+<script src="{{B}}assets/js/zrodla.js"></script>
+<script src="{{B}}assets/js/core.js"></script>
+<!-- Strony dokumentów nie mają własnego skryptu — warstwę wspólną uruchamiamy tutaj. -->
+<script>window.PS && PS.boot();</script>
+</body>
+</html>

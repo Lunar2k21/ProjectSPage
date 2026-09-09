@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+
+<title>Wyniki i klasyfikacje — Project Simracing</title>
+<meta name="description" content="Wyniki rund i klasyfikacje sezonu Project Simracing: EA Sports WRC, Le Mans Ultimate, Forza Horizon 6. Dane prosto z arkuszy ligowych, odświeżane automatycznie.">
+<link rel="canonical" href="https://projectsimracing.pl/wyniki.html">
+<link rel="alternate" hreflang="pl" href="https://projectsimracing.pl/wyniki.html">
+<link rel="alternate" hreflang="en" href="https://projectsimracing.pl/wyniki.html?lang=en">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Project Simracing">
+<meta property="og:url" content="https://projectsimracing.pl/wyniki.html">
+<meta property="og:title" content="Wyniki i klasyfikacje — Project Simracing">
+<meta property="og:description" content="Wyniki rund i klasyfikacje sezonu, prosto z arkuszy ligowych.">
+<meta property="og:image" content="https://projectsimracing.pl/assets/img/hero/wrc-1920.webp">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/brand/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/img/brand/favicon-16.png">
+<link rel="apple-touch-icon" href="assets/img/brand/apple-touch-icon.png">
+
+<!-- Nagłówki i tekst widoczny od razu; reszta krojów dojeżdża sama. -->
+<link rel="preload" as="font" type="font/woff2" crossorigin
+      href="assets/fonts/saira-condensed-800.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin
+      href="assets/fonts/barlow-400.woff2">
+<link rel="stylesheet" href="assets/css/style.css">
+
+<script>
+(function(){try{var t=localStorage.getItem('ps-theme');
+if(!t)t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
+document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+</script>
+</head>
+
+<body>
+<a class="skip" href="#main" data-i18n="skip">Przejdź do treści</a>
+
+<header class="topbar" id="topbar">
+  <div class="shell topbar__in">
+    <a class="brand" href="index.html" aria-label="Project Simracing — strona główna">
+      <picture>
+        <source srcset="assets/img/brand/logo.webp" type="image/webp">
+        <img src="assets/img/brand/logo.png" width="2500" height="236" alt="Project Simracing">
+      </picture>
+    </a>
+
+    <nav class="nav" id="navMain" aria-label="Nawigacja główna">
+      <a href="index.html#hub">Odnośniki</a>
+      <a href="wyniki.html" class="is-on">Wyniki</a>
+    </nav>
+
+    <div class="topbar__tools">
+      <div class="seg" role="group" aria-label="Język">
+        <button type="button" class="seg__btn is-on" data-lang="pl" aria-pressed="true">PL</button>
+        <button type="button" class="seg__btn" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <button type="button" class="icobtn" id="themeBtn" aria-label="Przełącz motyw" title="Przełącz motyw">
+        <svg class="ico-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.6"/><path d="M12 1.6v3M12 19.4v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1.6 12h3M19.4 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+        <svg class="ico-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+      <a class="btn btn--primary topbar__cta" href="https://discord.gg/R3Tu68jWwK" target="_blank" rel="noopener">Discord</a>
+      <button type="button" class="icobtn burger" id="burger" aria-label="Menu" aria-expanded="false" aria-controls="mobnav">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+    </div>
+  </div>
+  <nav class="mobnav" id="mobnav" aria-label="Nawigacja mobilna" hidden></nav>
+</header>
+
+<main id="main">
+
+<section class="rhead">
+  <div class="shell">
+    <h1 data-i18n="res.title">Wyniki i klasyfikacje</h1>
+    <div class="champs" id="champs" role="tablist" aria-label="Wybór mistrzostw"></div>
+    <div class="rounds" id="rounds" role="tablist" aria-label="Wybór zakładki"></div>
+  </div>
+</section>
+
+<div class="shell">
+
+  <div class="status" id="status">
+    <span class="live"><i aria-hidden="true"></i><span data-i18n="res.live">Na żywo</span></span>
+    <span class="mono dim" id="stUpdated">—</span>
+    <span class="mono dim status__src" id="stSource"></span>
+  </div>
+
+  <p class="notice" id="notice" hidden></p>
+
+  <div class="podium" id="podium"></div>
+
+  <div class="filters" id="filters" hidden>
+    <span class="mono dim" data-i18n="res.division">Dywizja</span>
+    <div class="chips" id="divChips"></div>
+    <label class="search">
+      <span class="visually-hidden" data-i18n="res.searchLabel">Szukaj kierowcy</span>
+      <input type="search" id="search" placeholder="Szukaj kierowcy…" autocomplete="off">
+    </label>
+  </div>
+
+  <div class="tbl-wrap" id="tableWrap"></div>
+
+  <p class="rfoot mono dim" id="rowCount"></p>
+</div>
+
+</main>
+
+<footer class="foot">
+  <div class="shell foot__in">
+    <picture class="foot__logo">
+      <source srcset="assets/img/brand/logo.webp" type="image/webp">
+      <img src="assets/img/brand/logo.png" width="2500" height="236" alt="Project Simracing">
+    </picture>
+    <p class="mono dim foot__copy">© <span id="year">2026</span> Project Simracing · projectsimracing.pl</p>
+    <nav class="foot__social" aria-label="Media społecznościowe">
+      <a href="https://discord.gg/R3Tu68jWwK" target="_blank" rel="noopener">Discord</a>
+      <a href="https://www.youtube.com/@ProjectSimracingpl" target="_blank" rel="noopener">YouTube</a>
+      <a href="https://www.facebook.com/ProjectSimracing/" target="_blank" rel="noopener">Facebook</a>
+      <a href="https://patronite.pl/projectsimracing" target="_blank" rel="noopener">Patronite</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="assets/js/config.js"></script>
+<script src="assets/js/kalendarz.js"></script>
+<script src="assets/js/zrodla.js"></script>
+<script src="assets/js/core.js"></script>
+<script src="assets/js/dane.js"></script>
+<script src="assets/js/results.js"></script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>Nie ma takiej strony — Project Simracing</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/brand/favicon-32.png">
+<!-- Nagłówki i tekst widoczny od razu; reszta krojów dojeżdża sama. -->
+<link rel="preload" as="font" type="font/woff2" crossorigin
+      href="/assets/fonts/saira-condensed-800.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin
+      href="/assets/fonts/barlow-400.woff2">
+<link rel="stylesheet" href="/assets/css/style.css">
+<script>
+(function(){try{var t=localStorage.getItem('ps-theme');
+if(!t)t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
+document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+</script>
+</head>
+
+<body>
+<main id="main">
+  <section class="rhead">
+    <div class="shell">
+      <p class="mono dim">Błąd 404</p>
+      <h1>Nie ma takiej strony</h1>
+      <p class="rhead__sub">Adres jest nieaktualny albo zawiera literówkę. Poniżej wszystko, co u nas jest.</p>
+
+      <p class="slide__cta" style="margin-top: 26px; display: flex; gap: 10px; flex-wrap: wrap;">
+        <a class="btn btn--primary" href="/"><span class="btn__t">Strona główna</span></a>
+        <a class="btn btn--ghost" href="/wyniki.html"><span class="btn__t">Wyniki</span></a>
+        <a class="btn btn--ghost" href="/kalendarz.html"><span class="btn__t">Kalendarz</span></a>
+        <a class="btn btn--ghost" href="/artykuly/"><span class="btn__t">Artykuły</span></a>
+        <a class="btn btn--ghost" href="/regulamin/"><span class="btn__t">Regulamin</span></a>
+      </p>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="shell foot__in">
+    <picture class="foot__logo">
+      <source srcset="/assets/img/brand/logo.webp" type="image/webp">
+      <img src="/assets/img/brand/logo.png" width="2500" height="236" alt="Project Simracing">
+    </picture>
+    <p class="mono dim foot__copy">© 2026 Project Simracing · projectsimracing.pl</p>
+    <nav class="foot__social" aria-label="Media społecznościowe">
+      <a href="https://discord.gg/R3Tu68jWwK" target="_blank" rel="noopener">Discord</a>
+      <a href="https://www.youtube.com/@ProjectSimracingpl" target="_blank" rel="noopener">YouTube</a>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>
