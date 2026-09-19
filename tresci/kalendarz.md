@@ -25,3 +25,14 @@ tytul: Kalendarz sezonu
 | 5 | Rajd Europy Środkowej | 2026-11-01 23:00 | 2026-11-15 23:00 | 5. CER |
 | 6 | Rajd Estonii | 2026-11-15 23:00 | 2026-11-29 23:00 | 6. EST |
 | 7 | Rajd Polski | 2026-11-29 23:00 | 2026-12-13 23:00 | 7. POL |
+
+## Le Mans Ultimate · Seasonal Cup — Sezon 1 {lmu}
+
+| # | Runda | Start | Koniec | Wyniki |
+|---|---|---|---|---|
+| 1 | Belgia — Spa-Francorchamps | 2026-10-02 19:00 | | |
+| 2 | Stany Zjednoczone | 2026-10-16 19:00 | | |
+| 3 | Japonia | 2026-10-30 19:00 | | |
+| 4 | Wielka Brytania | 2026-11-13 19:00 | | |
+| 5 | Hiszpania | 2026-11-27 19:00 | | |
+| 6 | Włochy | 2026-12-11 19:00 | | |
