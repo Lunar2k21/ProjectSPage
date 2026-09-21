@@ -70,21 +70,21 @@ function pad (n) { return (n < 10 ? '0' : '') + n; }
 /* ------------------------------------------------------------------
    WYBÓR MISTRZOSTW — pokazujemy tylko wtedy, gdy jest z czego wybierać
 ------------------------------------------------------------------ */
-function renderSeries (lista) {
+function renderSeries (serie) {
   var box = $('#series');
   if (!box) return;
 
-  var seen = [];
-  lista.forEach(function (r) { if (r.series && seen.indexOf(r.series) === -1) seen.push(r.series); });
-
-  if (seen.length < 2) { box.hidden = true; state.series = 'all'; return; }
+  var id = serie.map(function (s) { return s.seria; }).filter(Boolean);
+  if (id.length < 2) { box.hidden = true; state.series = 'all'; return; }
   box.hidden = false;
 
-  var etyk = CFG.seriesLabel || {};
-  box.innerHTML = ['all'].concat(seen).map(function (id) {
-    var label = id === 'all' ? t('cal.all') : (PS.txt(etyk[id]) || id).split(' · ')[0];
-    return '<button type="button" class="champ' + (state.series === id ? ' is-on' : '') + '"' +
-           ' data-series="' + esc(id) + '" role="tab" aria-selected="' + (state.series === id) + '">' +
+  box.innerHTML = [{ seria: 'all' }].concat(serie).map(function (s) {
+    var wszystkie = s.seria === 'all';
+    var label = wszystkie ? t('cal.all') : (s.etykieta || s.seria).split(' · ')[0];
+    return '<button type="button" class="champ' + (state.series === s.seria ? ' is-on' : '') + '"' +
+           (wszystkie ? '' : ' style="--kolor:' + PS.kolorSerii(s.seria) + '"') +
+           ' data-series="' + esc(s.seria) + '" role="tab" aria-selected="' + (state.series === s.seria) + '">' +
+           (wszystkie ? '' : '<i class="champ__kropka" aria-hidden="true"></i>') +
            esc(label) + '</button>';
   }).join('');
 
@@ -97,134 +97,163 @@ function renderSeries (lista) {
 }
 
 /* ------------------------------------------------------------------
-   KARTA NAJBLIŻSZEJ RUNDY
+   KARTY BIEŻĄCYCH RUND — po jednej na serię
+   Dwie serie potrafią się nakładać (runda WRC trwa dwa tygodnie, a w
+   tym czasie startuje LMU), więc każda dostaje własną kartę z własnym
+   odliczaniem, zamiast walczyć o jedno miejsce.
 ------------------------------------------------------------------ */
-function renderNext (lista) {
+var karty = [];
+
+function ikonaIcs () {
+  return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M3.5 9h17M4.5 5.5h15v15h-15z"/></svg>';
+}
+
+function renderNext (serie) {
   var box = $('#nextCard');
   if (!box) return;
 
-  var r = null;
-  for (var i = 0; i < lista.length; i++) { if (lista[i].next) { r = lista[i]; break; } }
-  if (!r) { box.hidden = true; return; }
+  karty = serie.filter(function (s) { return s.glowna; });
+  if (!karty.length) { box.hidden = true; box.innerHTML = ''; return; }
   box.hidden = false;
+  box.classList.toggle('is-para', karty.length > 1);
 
-  var ics = r.start
-    ? '<a class="btn btn--ghost btn--sm" href="' + PS.icsUrl(r) + '" download="project-simracing.ics">' +
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M3.5 9h17M4.5 5.5h15v15h-15z"/></svg>' +
-      '<span class="btn__t">' + esc(t('cal.add')) + '</span></a>'
-    : '';
+  box.innerHTML = karty.map(function (s, i) {
+    var r = s.glowna;
+    var ics = r.start
+      ? '<a class="btn btn--ghost btn--sm" href="' + PS.icsUrl(r) + '" download="project-simracing.ics">' +
+        ikonaIcs() + '<span class="btn__t">' + esc(t('cal.add')) + '</span></a>'
+      : '';
 
-  box.innerHTML =
-    '<p class="mono nextcard__kick">' + esc(r.live ? t('cal.livenow') : t('cal.next')) +
-      (r.seriesLabel ? ' · ' + esc(r.seriesLabel) : '') + '</p>' +
-    '<h2 class="nextcard__name">' +
-      (r.n ? esc(t('cal.round')) + ' ' + pad(r.n) + ' · ' : '') + esc(r.name) + '</h2>' +
-    '<div class="nextcard__grid">' +
-      '<div><span class="mono dim" id="ncLabel"></span>' +
-        '<p class="nextcard__clock" id="ncClock">—</p></div>' +
-      '<div><span class="mono dim">' + esc(PS.dateRange(r.start, r.end) || t('cal.nodate')) + '</span></div>' +
-      '<div class="nextcard__act">' + ics + '</div>' +
-    '</div>' +
-    potemHtml(r);
+    var potem = '';
+    if (r.live && s.potem) {
+      potem = '<p class="mono dim nextcard__potem">' + esc(t('cal.after')) + ': ' + esc(s.potem.name) +
+              (s.potem.start ? ' · <span data-za="' + i + '"></span>' : '') + '</p>';
+    }
 
-  tick(r);
+    return '<article class="nextcard' + (r.live ? ' is-live' : '') + '" style="--kolor:' + PS.kolorSerii(s.seria) + '">' +
+             '<p class="mono nextcard__kick"><span class="nextcard__stan">' +
+               esc(r.live ? t('cal.livenow') : t('cal.next')) + '</span>' +
+               (s.etykieta ? '<span class="nextcard__seria">' + esc(s.etykieta) + '</span>' : '') + '</p>' +
+             '<h2 class="nextcard__name">' +
+               (r.n ? esc(t('cal.round')) + ' ' + pad(r.n) + ' · ' : '') + esc(r.name) + '</h2>' +
+             '<div class="nextcard__grid">' +
+               '<div><span class="mono dim" data-etyk="' + i + '"></span>' +
+                 '<p class="nextcard__clock" data-zegar="' + i + '">—</p></div>' +
+               '<div><span class="mono dim">' + esc(PS.dateRange(r.start, r.end) || t('cal.nodate')) + '</span></div>' +
+               '<div class="nextcard__act">' + ics + '</div>' +
+             '</div>' +
+             potem +
+           '</article>';
+  }).join('');
+
+  tick();
 }
 
-/* Gdy runda trwa, pod kartą dopisujemy, kiedy startuje kolejna. */
-function potemHtml (r) {
-  if (!r || !r.live) return '';
-  var p = PS.nastepnaPo(r);
-  if (!p) return '';
-  var dni = p.start ? Math.max(0, Math.ceil((p.start.getTime() - Date.now()) / 86400000)) : 0;
-  return '<p class="mono dim nextcard__potem">' + esc(t('cal.after')) + ': ' + esc(p.name) +
-         (p.start ? ' · ' + esc(t('cal.in').toLowerCase()) + ' ' + dni + ' ' + esc(t(dni === 1 ? 'd1' : 'd')) : '') +
-         '</p>';
-}
-
-function tick (r) {
-  var clockEl = $('#ncClock'), labelEl = $('#ncLabel');
-  if (!clockEl) return;
-
-  if (!r || !r.start) {
-    labelEl.textContent = '';
-    clockEl.textContent = t('cal.nodate');
-    clockEl.classList.add('is-soft');
-    return;
-  }
-
+function tick () {
   var teraz = Date.now();
-  var diff = r.start.getTime() - teraz;
-  var doKonca = false;
+  karty.forEach(function (s, i) {
+    var r = s.glowna;
+    var zegar = $('[data-zegar="' + i + '"]');
+    var etyk = $('[data-etyk="' + i + '"]');
+    if (!zegar) return;
 
-  if (diff <= 0 && r.end && r.end.getTime() > teraz) {
-    diff = r.end.getTime() - teraz;
-    doKonca = true;
-  } else if (diff <= 0) {
-    labelEl.textContent = '';
-    clockEl.textContent = t('cal.livenow');
-    clockEl.classList.add('is-soft');
-    return;
-  }
+    if (!r.start) {
+      etyk.textContent = '';
+      zegar.textContent = t('cal.nodate');
+      zegar.classList.add('is-soft');
+    } else if (r.live && r.end) {
+      etyk.textContent = t('cal.left');
+      zegar.textContent = PS.odliczanie(r.end.getTime() - teraz);
+      zegar.classList.remove('is-soft');
+    } else if (r.start.getTime() <= teraz) {
+      etyk.textContent = '';
+      zegar.textContent = t('cal.livenow');
+      zegar.classList.add('is-soft');
+    } else {
+      etyk.textContent = t('cal.in');
+      zegar.textContent = PS.odliczanie(r.start.getTime() - teraz);
+      zegar.classList.remove('is-soft');
+    }
 
-  var s = Math.floor(diff / 1000);
-  var d = Math.floor(s / 86400); s -= d * 86400;
-  var h = Math.floor(s / 3600);  s -= h * 3600;
-  var m = Math.floor(s / 60);    s -= m * 60;
+    var za = $('[data-za="' + i + '"]');
+    if (za && s.potem && s.potem.start) {
+      var dni = Math.max(0, Math.ceil((s.potem.start.getTime() - teraz) / 86400000));
+      za.textContent = t('cal.in').toLowerCase() + ' ' + dni + ' ' + t(dni === 1 ? 'd1' : 'd');
+    }
 
-  labelEl.textContent = doKonca ? t('cal.left') : t('cal.in');
-  clockEl.classList.remove('is-soft');
-  clockEl.textContent = (d > 0 ? d + ' ' + t(d === 1 ? 'd1' : 'd') + ' · ' : '') + pad(h) + ':' + pad(m) + ':' + pad(s);
+    if ((r.live && r.end && r.end.getTime() <= teraz) ||
+        (!r.live && r.start && r.start.getTime() <= teraz && r.end && r.end.getTime() > teraz)) {
+      render();
+    }
+  });
 }
 
 /* ------------------------------------------------------------------
-   LISTA RUND
+   LISTA RUND — pogrupowana seriami
 ------------------------------------------------------------------ */
-function status (r) {
+function status (r, s) {
   if (r.live) return { cls: 'is-live', label: t('cal.livenow') };
   if (r.done) return { cls: 'is-done', label: t('cal.done') };
-  if (r.next) return { cls: 'is-next', label: t('cal.next') };
+  if (s && s.glowna === r) return { cls: 'is-next', label: t('cal.next') };
   if (!r.start) return { cls: 'is-soon', label: t('cal.nodate') };
   return { cls: '', label: t('cal.planned') };
 }
 
-function renderList (lista) {
+function wiersz (r, s) {
+  var st = status(r, s);
+
+  /* Bez daty wystarczy sama plakietka — powtarzanie „termin wkrótce"
+     dwa razy w jednym wierszu tylko zaśmieca. */
+  var kiedy = r.start ? '<b>' + esc(PS.dateRange(r.start, r.end)) + '</b>' : '<b class="dim">—</b>';
+
+  var akcje = '';
+  if (r.start && !r.done) {
+    akcje += '<a class="btn btn--ghost btn--sm" href="' + PS.icsUrl(r) + '" download="project-simracing.ics">' +
+             ikonaIcs() + '<span class="btn__t">' + esc(t('cal.add')) + '</span></a>';
+  }
+  if (r.done) {
+    var cel = 'wyniki.html?champ=' + encodeURIComponent(r.series || '') +
+              (r.resultsTab ? '&tab=' + encodeURIComponent(r.resultsTab) : '');
+    akcje += '<a class="rlist__res" href="' + esc(cel) + '">' + esc(t('cal.results')) + ' →</a>';
+  }
+
+  return '<li class="rnd ' + st.cls + '">' +
+           '<span class="rnd__n">' + pad(r.n) + '</span>' +
+           '<div class="rnd__body"><h3 class="rnd__name">' + esc(r.name) + '</h3></div>' +
+           '<div class="rnd__when">' + kiedy +
+             '<span class="mono rnd__badge">' + esc(st.label) + '</span></div>' +
+           '<div class="rnd__act">' + akcje + '</div>' +
+         '</li>';
+}
+
+/* 1 runda, 2–4 rundy, 5 rund, 22 rundy… */
+function ileRund (n) {
+  if (PS.lang === 'en') return n === 1 ? 'round' : 'rounds';
+  if (n === 1) return 'runda';
+  var j = n % 10, d = n % 100;
+  return (j >= 2 && j <= 4 && (d < 10 || d >= 20)) ? 'rundy' : 'rund';
+}
+
+function renderList (serie) {
   var box = $('#rlist');
   if (!box) return;
 
-  if (!lista.length) {
-    box.innerHTML = '<li class="empty">' + esc(t('cal.empty')) + '</li>';
+  if (!serie.length) {
+    box.innerHTML = '<p class="empty">' + esc(t('cal.empty')) + '</p>';
     return;
   }
 
-  box.innerHTML = lista.map(function (r) {
-    var st = status(r);
-
-    /* Bez daty wystarczy sama plakietka — powtarzanie „termin wkrótce"
-       dwa razy w jednym wierszu tylko zaśmieca. */
-    var kiedy = r.start ? '<b>' + esc(PS.dateRange(r.start, r.end)) + '</b>' : '<b class="dim">—</b>';
-
-    var akcje = '';
-    if (r.start && !r.done) {
-      akcje += '<a class="btn btn--ghost btn--sm" href="' + PS.icsUrl(r) + '" download="project-simracing.ics">' +
-               '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M3.5 9h17M4.5 5.5h15v15h-15z"/></svg>' +
-               '<span class="btn__t">' + esc(t('cal.add')) + '</span></a>';
-    }
-    if (r.done) {
-      var cel = 'wyniki.html?champ=' + encodeURIComponent(r.series || '') +
-                (r.resultsTab ? '&tab=' + encodeURIComponent(r.resultsTab) : '');
-      akcje += '<a class="rlist__res" href="' + esc(cel) + '">' + esc(t('cal.results')) + ' →</a>';
-    }
-
-    return '<li class="rnd ' + st.cls + '">' +
-             '<span class="rnd__n">' + pad(r.n) + '</span>' +
-             '<div class="rnd__body">' +
-               '<h2 class="rnd__name">' + esc(r.name) + '</h2>' +
-               (r.seriesLabel ? '<p class="mono dim">' + esc(r.seriesLabel) + '</p>' : '') +
-             '</div>' +
-             '<div class="rnd__when">' + kiedy +
-               '<span class="mono rnd__badge">' + esc(st.label) + '</span></div>' +
-             '<div class="rnd__act">' + akcje + '</div>' +
-           '</li>';
+  box.innerHTML = serie.map(function (s) {
+    var zakres = s.od ? PS.dateRange(s.od, s.do) : '';
+    var ile = s.rundy.length;
+    return '<section class="rgrupa" style="--kolor:' + PS.kolorSerii(s.seria) + '">' +
+             '<header class="rgrupa__head">' +
+               '<h2 class="rgrupa__tytul">' + esc(s.etykieta || t('cal.title')) + '</h2>' +
+               '<p class="mono dim rgrupa__info">' + ile + ' ' + esc(ileRund(ile)) +
+                 (zakres ? ' · ' + esc(zakres) : '') + '</p>' +
+             '</header>' +
+             '<ol class="rlist">' + s.rundy.map(function (r) { return wiersz(r, s); }).join('') + '</ol>' +
+           '</section>';
   }).join('');
 }
 
@@ -263,20 +292,21 @@ function renderFoot (lista) {
    SKŁADANIE
 ------------------------------------------------------------------ */
 function render () {
-  var wszystkie = PS.rounds();
-  var lista = state.series === 'all'
+  var wszystkie = PS.stanSerii();
+  var widoczne = state.series === 'all'
     ? wszystkie
-    : wszystkie.filter(function (r) { return r.series === state.series; });
+    : wszystkie.filter(function (s) { return s.seria === state.series; });
+
+  var rundy = [];
+  widoczne.forEach(function (s) { rundy = rundy.concat(s.rundy); });
 
   renderSeries(wszystkie);
-  renderNext(lista);
-  renderList(lista);
-  renderFoot(lista);
+  renderNext(widoczne);
+  renderList(widoczne);
+  renderFoot(rundy);
 
   clearInterval(tickTimer);
-  var nast = null;
-  for (var i = 0; i < lista.length; i++) { if (lista[i].next) { nast = lista[i]; break; } }
-  if (nast) tickTimer = setInterval(function () { tick(nast); }, 1000);
+  if (karty.length) tickTimer = setInterval(tick, 1000);
 }
 
 PS.onLang(render);

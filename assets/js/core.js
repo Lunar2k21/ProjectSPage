@@ -84,6 +84,7 @@ var STR = {
   pl: {
     'skip': 'Przejdź do treści',
     'soon': 'wkrótce',
+    'd': 'dni', 'd1': 'dzień',
     'theme.toDark': 'Włącz motyw ciemny',
     'theme.toLight': 'Włącz motyw jasny',
     'pod.notime': '--:--.---'
@@ -91,6 +92,7 @@ var STR = {
   en: {
     'skip': 'Skip to content',
     'soon': 'soon',
+    'd': 'days', 'd1': 'day',
     'theme.toDark': 'Switch to dark theme',
     'theme.toLight': 'Switch to light theme',
     'pod.notime': '--:--.---'
@@ -363,6 +365,79 @@ function nastepnaPo (r) {
   return out;
 }
 
+/* ------------------------------------------------------------------
+   STAN KAŻDEJ SERII
+   Serie biegną równolegle — runda WRC może trwać, gdy LMU właśnie
+   startuje. Zamiast jednej „najbliższej rundy" dla całej ligi każda
+   seria dostaje własną: tę, która trwa, albo najbliższą przed nami.
+------------------------------------------------------------------ */
+function stanSerii () {
+  var lista = rounds();
+  var kolejnosc = [], grupy = {};
+
+  lista.forEach(function (r) {
+    var s = r.series || '_';
+    if (!grupy[s]) { grupy[s] = []; kolejnosc.push(s); }
+    grupy[s].push(r);
+  });
+
+  var teraz = Date.now();
+  return kolejnosc.map(function (s) {
+    var rundy = grupy[s];
+    var trwa = null, nast = null, potem = null;
+
+    rundy.forEach(function (r) {
+      if (r.live && !trwa) trwa = r;
+    });
+    rundy.forEach(function (r) {
+      if (r.done || r.live || !r.start) return;
+      if (!nast || r.start < nast.start) nast = r;
+    });
+    if (!trwa && !nast) {
+      for (var i = 0; i < rundy.length; i++) {
+        if (!rundy[i].done && !rundy[i].start) { nast = rundy[i]; break; }
+      }
+    }
+
+    /* „główna" to ta, którą pokazujemy dużymi literami; gdy runda trwa,
+       najbliższa kolejna schodzi do linijki pod spodem. */
+    var glowna = trwa || nast;
+    if (trwa) potem = nast;
+
+    var start = null, koniec = null;
+    rundy.forEach(function (r) {
+      if (r.start && (!start || r.start < start)) start = r.start;
+      var k = r.end || r.start;
+      if (k && (!koniec || k > koniec)) koniec = k;
+    });
+
+    return {
+      seria: s === '_' ? '' : s,
+      etykieta: (rundy[0] && rundy[0].seriesLabel) || '',
+      rundy: rundy,
+      glowna: glowna,
+      potem: potem,
+      skonczona: !glowna && rundy.every(function (r) { return r.done; }),
+      od: start, do: koniec,
+      teraz: teraz
+    };
+  });
+}
+
+/* Kolor serii — ta sama barwa w pasku, kalendarzu i filtrach. */
+function kolorSerii (id) {
+  return 'var(--seria-' + (id || 'inna') + ', var(--dim))';
+}
+
+/* Odliczanie w formie „13 dni · 06:34:57". */
+function odliczanie (ms) {
+  var s = Math.max(0, Math.floor(ms / 1000));
+  var d = Math.floor(s / 86400); s -= d * 86400;
+  var h = Math.floor(s / 3600);  s -= h * 3600;
+  var m = Math.floor(s / 60);    s -= m * 60;
+  return (d > 0 ? d + ' ' + t(d === 1 ? 'd1' : 'd') + ' · ' : '') + pad2(h) + ':' + pad2(m) + ':' + pad2(s);
+}
+
 /* Zakres dat: „17–24 września" albo pojedynczy termin z godziną. */
 function dateRange (start, end) {
   if (!start) return '';
@@ -443,6 +518,7 @@ window.PS = {
   normalize: normalize, seedFrom: seedFrom,
   photoFile: photoFile, photoImg: photoImg,
   rounds: rounds, nextRound: nextRound, nastepnaPo: nastepnaPo,
+  stanSerii: stanSerii, kolorSerii: kolorSerii, odliczanie: odliczanie,
   icsUrl: icsUrl, dateText: dateText, dateRange: dateRange,
   guardImages: guardImages, renderNav: renderNav, boot: boot, cfg: CFG,
   get lang () { return lang; }

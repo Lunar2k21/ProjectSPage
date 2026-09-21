@@ -88,6 +88,15 @@
   --silver:      #AEB6C6;
   --bronze:      #B07B4B;
 
+  /* Kolor każdej serii — ten sam w pasku rund, kalendarzu i filtrach.
+     Zielony zostaje zarezerwowany dla „trwa teraz", więc serie go
+     nie używają. Czerwień LMU jest chłodniejsza od pomarańczu WRC,
+     żeby obie dało się odróżnić jednym rzutem oka. */
+  --seria-wrc:   var(--orange);
+  --seria-lmu:   #D8323F;
+  --seria-fh6:   #4E9BE0;
+  --seria-acr:   #C99A3E;
+
   /* powierzchnie */
   --bg:          #0D1320;   /* tło treści */
   --bg-outer:    #080C15;   /* poza kolumną treści (ultraszerokie ekrany) */
@@ -132,6 +141,9 @@
   --bronze:      #8A5E33;
   --green:       #1F8A57;
   --amber-ink:   #93650F;   /* czytelny bursztyn na kremowym tle */
+  --seria-lmu:   #B01F2E;
+  --seria-fh6:   #2468A8;
+  --seria-acr:   #8C6516;
 }
 
 /* ---------------------------------------------------------------
@@ -141,6 +153,12 @@
 * { margin: 0; padding: 0; }
 
 html { scroll-behavior: smooth; scroll-padding-top: calc(var(--topbar-h) + 8px); }
+
+/* Gdy cokolwiek wystaje poza ekran, telefon poszerza całą stronę —
+   Chrome każe ją wtedy przesuwać palcem, a Firefox pomniejsza całość.
+   „clip" ucina nadmiar bez tworzenia paska przewijania i nie psuje
+   przyklejonego menu u góry (w przeciwieństwie do „hidden"). */
+html, body { overflow-x: clip; }
 
 body {
   background: var(--bg-outer);
@@ -655,7 +673,12 @@ body.is-theater-open { overflow: hidden; }
 }
 .champ small { font-family: var(--f-mono); font-size: 9.5px; letter-spacing: .1em; opacity: .8; }
 .champ:hover:not(:disabled) { color: var(--text); }
-.champ.is-on { background: var(--orange); color: var(--on-orange); }
+.champ.is-on { background: var(--kolor, var(--orange)); color: var(--on-orange); }
+.champ__kropka {
+  display: inline-block; align-self: center; width: 9px; height: 9px;
+  background: var(--kolor); clip-path: polygon(30% 0, 100% 0, 70% 100%, 0 100%);
+}
+.champ.is-on .champ__kropka { background: currentColor; }
 .champ:disabled { opacity: .4; cursor: not-allowed; }
 
 .rounds { display: flex; gap: 2px; margin-top: 14px; overflow-x: auto; padding-bottom: 2px; }
@@ -924,11 +947,25 @@ td.pts { font-weight: 500; }
   .nav { display: none; }
   .burger { display: grid; }
   .topbar__cta { display: none; }
-  .podium { grid-template-columns: 1fr; }
+  .podium { grid-template-columns: minmax(0, 1fr); }   /* bez minmax długa nazwa rozpychała kafelek */
+  .pod { min-width: 0; }
   .pod, .pod--1 { aspect-ratio: 16 / 9; }
   .videos { grid-template-columns: 1fr; }
   .nextround__when { margin-left: 0; text-align: left; }
   .nextround__in { gap: 12px; }
+}
+
+/* Pasek u góry na telefonie. Logo ma stałą wysokość 21 px, czyli
+   ponad 220 px szerokości — razem z przełącznikiem języka, motywem
+   i menu nie mieściło się poniżej ~410 px i wypychało przycisk menu
+   poza ekran. Tu logo zwęża się razem z ekranem. */
+@media (max-width: 520px) {
+  .topbar__in { gap: 10px; }
+  .brand { flex: 0 1 auto; min-width: 0; }
+  .brand img { width: min(186px, 44vw); height: auto; }
+  .topbar__tools { gap: 6px; flex: none; }
+  .seg__btn { padding: 6px 7px; }
+  .icobtn { width: 32px; }
 }
 
 @media (max-width: 560px) {
@@ -1112,4 +1149,365 @@ td.pts { font-weight: 500; }
 @media (max-width: 620px) {
   .doks { grid-template-columns: 1fr; }
   .dok__body { max-width: none; }
+}
+
+
+/* ---------------------------------------------------------------
+   15. RUNDY W TRAKCIE — po jednym wierszu na serię
+--------------------------------------------------------------- */
+.nextround__lista { display: flex; flex-direction: column; }
+.nr {
+  position: relative;
+  display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  padding: 14px 0 14px 18px;
+}
+.nr + .nr { border-top: 1px solid var(--line); }
+.nr::before {                         /* pasek w kolorze serii */
+  content: ""; position: absolute; left: 0; top: 14px; bottom: 14px; width: 3px;
+  background: var(--kolor, var(--line));
+}
+.nr__kick { display: flex; flex-wrap: wrap; gap: 3px 12px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+.nr__stan { color: var(--dim); }
+.nr.is-live .nr__stan { color: var(--green); }
+.nr__seria { color: var(--kolor, var(--dim)); }
+.nr__nazwa {
+  font-family: var(--f-disp); text-transform: uppercase; font-weight: 800;
+  font-size: clamp(20px, 2.2vw, 26px); line-height: 1.05; margin-top: 3px;
+}
+.nr__potem { margin-top: 6px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--dim); }
+.nr__kiedy { margin-left: auto; text-align: right; }
+.nr__zegar {
+  font-family: var(--f-mono); font-size: clamp(20px, 2.2vw, 26px); font-weight: 500;
+  font-variant-numeric: tabular-nums; color: var(--amber-ink); line-height: 1.15;
+}
+.nr__zegar.is-soft { color: var(--dim); font-size: 17px; letter-spacing: .04em; }
+.nr__ics { flex: none; }
+
+/* Karty w kalendarzu: dwie serie naraz stoją obok siebie. */
+.nextcards { display: grid; gap: 14px; margin: 24px 0 30px; }
+.nextcards[hidden] { display: none; }
+.nextcards.is-para { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.nextcards .nextcard { margin: 0; border-left-color: var(--kolor, var(--orange)); }
+.nextcard__kick { display: flex; flex-wrap: wrap; gap: 3px 12px; color: var(--dim); }
+.nextcard.is-live .nextcard__stan { color: var(--green); }
+.nextcard__seria { color: var(--kolor, var(--orange)); }
+
+/* Lista rund: każda seria ma własny blok z nagłówkiem w swoim kolorze. */
+.rgrupy { display: flex; flex-direction: column; gap: clamp(26px, 3.4vw, 38px); }
+.rgrupa__head {
+  display: flex; align-items: baseline; gap: 6px 16px; flex-wrap: wrap;
+  padding-bottom: 10px; border-bottom: 2px solid var(--kolor, var(--line));
+}
+.rgrupa__tytul {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--f-disp); text-transform: uppercase; font-weight: 800;
+  font-size: clamp(18px, 2vw, 23px); line-height: 1.1;
+}
+.rgrupa__tytul::before {
+  content: ""; flex: none; width: 12px; height: 12px; background: var(--kolor, var(--dim));
+  clip-path: polygon(30% 0, 100% 0, 70% 100%, 0 100%);
+}
+.rgrupa__info { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+.rgrupa .rlist { border-top: 0; }
+.rgrupa .rnd.is-next { background: color-mix(in srgb, var(--kolor) 9%, var(--bg)); box-shadow: inset 3px 0 0 var(--kolor); }
+.rgrupa .rnd.is-next .rnd__n, .rgrupa .rnd.is-next .rnd__badge { color: var(--kolor); }
+.rgrupa .rnd.is-live { box-shadow: inset 3px 0 0 var(--green); }
+.rgrupa .rlist__res { color: var(--kolor); }
+
+@media (max-width: 900px) {
+  .nextcards.is-para { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 860px) {
+  .nr { gap: 10px 20px; }
+  .nr__kiedy { margin-left: 0; text-align: left; }
+}
+
+
+/* ---------------------------------------------------------------
+   16. WYNIKI LMU Z PLIKU (lmu.html)
+--------------------------------------------------------------- */
+.lmu { padding-block: clamp(22px, 3vw, 34px) clamp(40px, 5vw, 64px); }
+
+.lmu-wrzut {
+  display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center;
+  padding: clamp(28px, 4vw, 44px) 20px; cursor: pointer;
+  border: 1px dashed var(--line-strong); background: var(--surface);
+  transition: border-color .16s, background .16s;
+}
+.lmu-wrzut:hover, .lmu-wrzut.is-nad { border-color: var(--seria-lmu); background: color-mix(in srgb, var(--seria-lmu) 6%, var(--surface)); }
+.lmu-wrzut__ikona svg { width: 34px; height: 34px; fill: none; stroke: var(--seria-lmu); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.lmu-wrzut__tytul { font-family: var(--f-disp); text-transform: uppercase; font-weight: 800; font-size: clamp(18px, 2vw, 22px); }
+.lmu-wrzut__opis { font-size: 11px; letter-spacing: .08em; }
+.lmu-przyklad { margin: 10px 0 0; text-align: right; }
+.lmu-przyklad .more { color: var(--orange); font-family: var(--f-disp); text-transform: uppercase; font-weight: 700; letter-spacing: .05em; font-size: 14px; }
+#lmuBlad { margin-top: 14px; }
+
+.lmu-ust { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: flex-end; margin: 26px 0 16px; }
+.lmu-pole { display: flex; flex-direction: column; gap: 6px; flex: 1 1 260px; min-width: 0; }
+.lmu-pole--szer { flex: 2 1 360px; }
+.lmu-pole span { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; }
+.lmu-pole input, .lmu-pole select {
+  font: inherit; color: var(--text); background: var(--panel);
+  border: 1px solid var(--line); padding: 9px 11px;
+}
+.lmu-check { display: flex; align-items: center; gap: 8px; padding-bottom: 10px; color: var(--dim); }
+
+.lmu-akcje { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 26px; }
+/* Przyciski narzędzia mają ten sam równoległobok co zakładki mistrzostw
+   na /wyniki: obie krawędzie pochylone, bez ramek. */
+.lmu-akcje .btn {
+  --skew: 11px;
+  padding: 10px calc(18px + var(--skew));
+  clip-path: polygon(var(--skew) 0, 100% 0, calc(100% - var(--skew)) 100%, 0 100%);
+}
+.lmu-akcje .btn--sm { --skew: 9px; padding: 10px calc(12px + var(--skew)); }
+.lmu-akcje .btn--ghost { background: var(--panel); color: var(--dim); }
+.lmu-akcje .btn--ghost::after { content: none; }
+.lmu-akcje .btn--ghost:hover { color: var(--text); background: var(--panel-hi, var(--panel)); }
+.lmu-akcje .btn + .btn { margin-left: -4px; }
+.lmu-akcje__info { font-size: 11px; letter-spacing: .06em; margin-left: auto; }
+
+/* Baner jak nagłówek grafiki i plakaty ligi: zdjęcie toru ucięte skosem,
+   pomarańczowy pas, granatowy panel z logo toru i numerem rundy.
+   Zawsze ciemny — to „zdjęcie", nie część motywu. */
+.lmu-baner {
+  --skos: 60px; --pas: 26px; --szer: 64%;
+  position: relative; overflow: hidden; isolation: isolate;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, calc(100% - var(--szer) - var(--pas) - 10px));
+  gap: 24px; align-items: end;
+  min-height: clamp(190px, 19vw, 250px); padding: clamp(18px, 2.4vw, 30px);
+  background: #151B2D; color: #EFE8DA;
+}
+.lmu-baner::before {
+  content: ""; position: absolute; inset: 0 auto 0 0; width: var(--szer); z-index: -1;
+  background: linear-gradient(90deg, rgba(11,17,28,.9), rgba(11,17,28,.5) 55%, rgba(11,17,28,.15)),
+              linear-gradient(180deg, rgba(11,17,28,0) 40%, rgba(11,17,28,.75)),
+              #0B111C var(--tlo, none) center / cover no-repeat;
+  clip-path: polygon(0 0, 100% 0, calc(100% - var(--skos)) 100%, 0 100%);
+}
+.lmu-baner::after {
+  content: ""; position: absolute; top: 0; bottom: 0; z-index: -1;
+  left: calc(var(--szer) - var(--skos)); width: calc(var(--skos) + var(--pas));
+  background: var(--orange);
+  clip-path: polygon(var(--skos) 0, 100% 0, var(--pas) 100%, 0 100%);
+}
+.lmu-baner__tytul {
+  font-family: var(--f-disp); text-transform: uppercase; font-style: italic; font-weight: 800;
+  font-size: clamp(28px, 4.2vw, 54px); line-height: .95; margin: 0 0 10px; color: #EFE8DA;
+}
+.lmu-baner__meta { color: rgba(239,232,218,.72); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; }
+.lmu-baner__panel { display: flex; flex-direction: column; align-items: flex-end; text-align: right; gap: 8px; }
+.lmu-baner__tor { width: min(100%, 220px); max-height: 80px; object-fit: contain; object-position: right; margin-bottom: 6px; }
+.lmu-baner__seria { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; }
+.lmu-baner__runda {
+  font-family: var(--f-disp); font-style: italic; font-weight: 800; text-transform: uppercase;
+  font-size: clamp(18px, 2.2vw, 28px); line-height: 1; white-space: nowrap;
+}
+
+/* pliki wczytane w tej sesji */
+.lmu-pliki { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.lmu-pliki:empty { display: none; }
+.lmu-plik {
+  --skew: 10px;
+  display: inline-flex; align-items: stretch; background: var(--panel); color: var(--dim);
+  clip-path: polygon(var(--skew) 0, 100% 0, calc(100% - var(--skew)) 100%, 0 100%);
+}
+.lmu-plik > button:first-child { display: flex; flex-direction: column; align-items: flex-start; padding: 7px 6px 7px calc(10px + var(--skew)); text-align: left; }
+.lmu-plik b { font-family: var(--f-disp); text-transform: uppercase; font-weight: 700; font-size: 14px; letter-spacing: .03em; color: var(--text); }
+.lmu-plik small { font-size: 10px; letter-spacing: .08em; }
+.lmu-plik__x { padding: 0 calc(8px + var(--skew)) 0 8px; font-size: 18px; color: var(--dim); }
+.lmu-plik__x:hover { color: var(--orange); }
+.lmu-plik.is-on { background: var(--seria-lmu); color: rgba(255,255,255,.85); }
+.lmu-plik.is-on b, .lmu-plik.is-on .lmu-plik__x { color: #fff; }
+
+/* poprawki nazwisk */
+.lmu-nazwy { margin: 0 0 18px; border: 1px solid var(--line); background: var(--surface); }
+.lmu-nazwy summary { cursor: pointer; padding: 11px 16px; display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
+.lmu-nazwy summary > span:first-child { font-family: var(--f-disp); text-transform: uppercase; font-weight: 700; letter-spacing: .04em; }
+.lmu-nazwy summary .mono { font-size: 10.5px; letter-spacing: .06em; }
+.lmu-nazwy__in { padding: 0 16px 16px; display: grid; gap: 10px; }
+.lmu-nazwy__in p { font-size: 13.5px; line-height: 1.55; }
+.lmu-nazwy code { font-family: var(--f-mono); font-size: 12px; color: var(--text); }
+.lmu-nazwy textarea {
+  width: 100%; font: 13px/1.6 var(--f-mono); color: var(--text); background: var(--bg);
+  border: 1px solid var(--line-strong); padding: 10px 12px; resize: vertical;
+}
+.lmu-nazwy__akcje { display: flex; flex-wrap: wrap; gap: 8px 22px; }
+.lmu-nazwy__akcje .more { color: var(--orange); font-family: var(--f-disp); text-transform: uppercase; font-weight: 700; letter-spacing: .05em; font-size: 13px; }
+
+.lmu-zakl { margin: 0 0 18px; }
+.lmu-link { color: var(--orange); white-space: nowrap; }
+.lmu-link:hover { text-decoration: underline; }
+.lmu-opis { font-size: 13px; line-height: 1.55; margin: 16px 0 4px; max-width: 90ch; }
+.lmu-sekcja { font-family: var(--f-disp); text-transform: uppercase; font-weight: 700; font-size: 17px; letter-spacing: .04em; margin: 28px 0 10px; }
+
+/* wyróżnienia */
+.lmu-nagrody { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-top: 18px; }
+.lmu-nagroda {
+  --skew: 12px;
+  position: relative; display: flex; flex-direction: column; gap: 3px; min-width: 0;
+  background: var(--panel); padding: 12px calc(14px + var(--skew)) 13px calc(26px + var(--skew));
+  clip-path: polygon(var(--skew) 0, 100% 0, calc(100% - var(--skew)) 100%, 0 100%);
+}
+.lmu-nagroda::before {
+  content: ""; position: absolute; inset: 0 auto 0 0; width: calc(14px + var(--skew)); background: var(--orange);
+  clip-path: polygon(var(--skew) 0, 100% 0, calc(100% - var(--skew)) 100%, 0 100%);
+}
+.lmu-nagroda__etyk { color: var(--orange); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; }
+.lmu-nagroda__kto { font-family: var(--f-disp); text-transform: uppercase; font-weight: 700; font-size: 19px; line-height: 1.15; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lmu-nagroda__war { color: var(--dim); font-size: 11.5px; }
+
+.lmu-zmiana { font-family: var(--f-mono); font-size: 10px; font-weight: 500; margin-left: 5px; vertical-align: 6px; }
+.lmu-zmiana.is-w { color: var(--green); }
+.lmu-zmiana.is-n { color: #E0553B; }
+
+/* przebieg wyścigu */
+.lmu-wykres-wrap { overflow-x: auto; border: 1px solid var(--line); background: var(--surface); padding: 12px 8px 4px; }
+.lmu-wykres { display: block; width: 100%; min-width: 760px; height: auto; }
+.lmu-wykres__siatka { stroke: var(--line); stroke-width: 1; }
+.lmu-wykres__os { fill: var(--dim); font: 11px var(--f-mono); }
+.lmu-linia polyline { fill: none; stroke: var(--k); stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; transition: opacity .15s, stroke-width .15s; }
+.lmu-linia.is-dnf polyline { stroke-dasharray: 5 4; }
+.lmu-linia__kto { fill: var(--k); font: 600 12.5px var(--f-body, 'Barlow', sans-serif); }
+.lmu-linia__x { fill: var(--k); font: 700 13px sans-serif; }
+.lmu-wykres:hover .lmu-linia { opacity: .22; }
+.lmu-wykres .lmu-linia:hover { opacity: 1; }
+.lmu-wykres .lmu-linia:hover polyline { stroke-width: 4; }
+
+/* okrążenia i sektory */
+.lmu-tab--staty td.num, .lmu-tab--sezon td.num { font-family: var(--f-mono); font-size: 13px; }
+.lmu-tab td.lmu-fiolet { color: #B36BFF; font-weight: 600; }
+:root[data-theme="light"] .lmu-tab td.lmu-fiolet { color: #7A2FD0; }
+.lmu-iskra { display: block; width: 150px; height: 30px; }
+.lmu-iskra polyline { fill: none; stroke: var(--klasa, var(--orange)); stroke-width: 1.6; stroke-linejoin: round; }
+.lmu-iskra__pit { stroke: var(--dim); stroke-width: 1; stroke-dasharray: 2 2; }
+.lmu-tab--sezon th small { display: block; font-size: 9px; letter-spacing: .06em; color: var(--dim); font-weight: 400; }
+
+/* incydenty */
+.lmu-zdarz { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.lmu-zdarz li {
+  display: grid; grid-template-columns: 70px 78px minmax(0, 1fr) auto; gap: 12px; align-items: baseline;
+  padding: 8px 4px; border-bottom: 1px solid var(--line); font-size: 14px;
+}
+.lmu-zdarz .mono { font-size: 11px; letter-spacing: .06em; }
+.lmu-zdarz__typ { font-family: var(--f-disp); text-transform: uppercase; font-weight: 700; font-size: 13px; letter-spacing: .05em; color: var(--dim); }
+.lmu-zdarz li.is-mocny .lmu-zdarz__typ { color: var(--amber-ink); }
+.lmu-zdarz li.is-kara .lmu-zdarz__typ { color: #E0553B; }
+.lmu-czat summary { cursor: pointer; }
+.lmu-czat ul { margin: 0; padding-left: 18px; color: var(--dim); font-size: 14px; line-height: 1.7; }
+
+.lmu-klasa { margin-top: 22px; }
+.lmu-klasa__tytul { display: flex; align-items: baseline; gap: 14px; margin-bottom: 8px; }
+.lmu-klasa__tytul > span:first-child {
+  --skew: 10px;
+  display: inline-block; background: var(--klasa); color: #0B111C;
+  font-family: var(--f-disp); text-transform: uppercase; font-weight: 800; font-size: 17px;
+  padding: 5px calc(14px + var(--skew));
+  clip-path: polygon(var(--skew) 0, 100% 0, calc(100% - var(--skew)) 100%, 0 100%);
+}
+.lmu-klasa__tytul .mono { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+
+.lmu-tab td { vertical-align: middle; }
+.lmu-nr {
+  --skew: 7px;
+  display: inline-block; min-width: 46px; text-align: center;
+  background: var(--klasa); color: #0B111C;
+  font-family: var(--f-disp); font-weight: 800; font-size: 15px;
+  padding: 3px calc(8px + var(--skew));
+  clip-path: polygon(var(--skew) 0, 100% 0, calc(100% - var(--skew)) 100%, 0 100%);
+}
+.lmu-kto { display: block; font-family: var(--f-disp); text-transform: uppercase; font-weight: 700; font-size: 16px; }
+.lmu-zespol { display: block; color: var(--dim); font-size: 12.5px; font-weight: 400; }
+.lmu-auto { white-space: nowrap; }
+.lmu-auto img { display: inline-block; vertical-align: middle; width: 110px; height: auto; margin: -8px 0; }
+.lmu-auto .lmu-marka {
+  width: 26px; height: 26px; margin: 0 8px 0 2px; padding: 3px;
+  background: #0B111C; border-radius: 3px;
+}
+.lmu-model { color: var(--dim); font-size: 12.5px; }
+.lmu-czas { font-family: var(--f-mono); }
+.lmu-najl { color: var(--amber-ink); font-weight: 600; }
+.lmu-status { color: #E0553B; font-family: var(--f-disp); font-weight: 800; }
+.lmu-kara {
+  display: inline-block; margin-left: 6px; padding: 1px 6px; vertical-align: 2px;
+  border: 1px solid #E0553B; color: #E0553B;
+  font-family: var(--f-mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
+}
+.lmu-tab tr.is-dnf td { opacity: .6; }
+.lmu-tab td.pts { font-family: var(--f-disp); font-weight: 800; font-size: 18px; }
+
+@media (max-width: 720px) {
+  .lmu-baner { grid-template-columns: 1fr; --szer: 100%; }
+  .lmu-baner::before { clip-path: none; }
+  .lmu-baner::after { display: none; }
+  .lmu-baner__panel { align-items: flex-start; text-align: left; border-top: 3px solid var(--orange); padding-top: 12px; }
+  .lmu-baner__tor { object-position: left; }
+  .lmu-zdarz li { grid-template-columns: 58px minmax(0, 1fr); }
+  .lmu-zdarz li > :nth-child(3) { grid-column: 1 / -1; }
+  .lmu-zdarz li > :nth-child(4) { grid-column: 1 / -1; }
+  .lmu-akcje__info { margin-left: 0; flex-basis: 100%; }
+  .lmu-auto img:not(.lmu-marka) { width: 84px; }
+}
+
+/* =====================================================================
+   17. GENERATOR GRAFIK (grafiki.html)
+   ===================================================================== */
+.graf {
+  display: grid; grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); gap: clamp(18px, 3vw, 36px);
+  align-items: start; padding-block: clamp(22px, 3vw, 34px) clamp(40px, 5vw, 64px);
+}
+.graf__panel { display: grid; gap: 14px; min-width: 0; }
+.graf__grupa { border: 1px solid var(--line); background: var(--surface); padding: 14px 16px 16px; display: grid; gap: 12px; min-width: 0; }
+.graf__grupa legend {
+  font-family: var(--f-disp); text-transform: uppercase; font-weight: 700; letter-spacing: .05em; font-size: 14px;
+  padding: 0 6px; margin-left: -6px;
+}
+.graf .lmu-pole { flex: 1 1 140px; }
+.graf .lmu-pole textarea {
+  width: 100%; font: 14px/1.5 var(--f-body); color: var(--text); background: var(--bg);
+  border: 1px solid var(--line-strong); padding: 9px 11px; resize: vertical;
+}
+.graf .lmu-pole input[type="range"] { accent-color: var(--orange); padding: 0; border: 0; background: none; }
+.graf__rzad { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; }
+.graf__rzad .more { color: var(--orange); font-family: var(--f-disp); text-transform: uppercase; font-weight: 700; letter-spacing: .05em; font-size: 14px; padding-bottom: 10px; }
+.graf__rzad .lmu-check { padding-bottom: 10px; }
+.graf__pomoc { font-size: 12px; margin-top: -4px; }
+.graf__pomoc code { font-family: var(--f-mono); font-size: 11.5px; color: var(--text); }
+
+.graf__szablony { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.graf__szablony button {
+  --skew: 9px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
+  background: var(--panel); color: var(--dim); text-align: left;
+  font-family: var(--f-disp); text-transform: uppercase; font-weight: 700; letter-spacing: .04em; font-size: 14px;
+  padding: 8px calc(10px + var(--skew));
+  clip-path: polygon(var(--skew) 0, 100% 0, calc(100% - var(--skew)) 100%, 0 100%);
+}
+.graf__szablony button small { font-family: var(--f-mono); font-weight: 400; font-size: 9.5px; letter-spacing: .08em; opacity: .8; }
+.graf__szablony button:hover { color: var(--text); }
+.graf__szablony button.is-on { background: var(--orange); color: var(--on-orange); }
+
+.graf__zdj {
+  display: grid; gap: 4px; justify-items: center; text-align: center; cursor: pointer;
+  border: 1.5px dashed var(--line-strong); padding: 14px 12px;
+  font-family: var(--f-disp); text-transform: uppercase; font-weight: 700; letter-spacing: .04em;
+  transition: border-color .15s, background .15s;
+}
+.graf__zdj[hidden] { display: none; }
+.graf__zdj small { font-size: 10px; letter-spacing: .06em; font-weight: 400; text-transform: none; }
+.graf__zdj:hover, .graf__zdj.is-nad { border-color: var(--orange); }
+
+.graf__podglad { position: sticky; top: 84px; min-width: 0; }
+.graf__podglad canvas {
+  display: block; width: 100%; height: auto; max-height: calc(100vh - 110px); object-fit: contain;
+  background: repeating-conic-gradient(var(--surface) 0 25%, var(--bg) 0 50%) 0 0 / 22px 22px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.35); cursor: grab; touch-action: none;
+}
+.graf__podglad canvas.is-ciag { cursor: grabbing; }
+.graf .lmu-akcje { margin: 0; }
+
+@media (max-width: 900px) {
+  .graf { grid-template-columns: 1fr; }
+  .graf__podglad { position: static; order: -1; }
+  .graf__podglad canvas { max-height: 70vh; }
 }

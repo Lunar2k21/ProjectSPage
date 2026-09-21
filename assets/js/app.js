@@ -324,95 +324,100 @@ document.addEventListener('visibilitychange', function () {
    NAJBLIŻSZA RUNDA + ODLICZANIE
    Terminy i plik .ics liczy core.js — tu tylko je pokazujemy.
 ------------------------------------------------------------------ */
-var active = null;
-
 function pad (n) { return (n < 10 ? '0' : '') + n; }
 
+/* Każda seria ma swój wiersz: trwająca runda (z odliczaniem do końca
+   i zapowiedzią kolejnej) albo najbliższa (z odliczaniem do startu).
+   Dzięki temu dwie serie w tym samym czasie są widoczne obok siebie,
+   a nie jedna zamiast drugiej. */
+var serieNaPasku = [];
+
 function renderNextRound () {
-  active = PS.nextRound();
-  var nameEl = $('#nrName'), kickEl = $('#nrKicker'), icsEl = $('#nrIcs');
-  if (!nameEl) return;
+  var box = $('#nrLista');
+  if (!box) return;
 
-  nameEl.textContent = active
-    ? (active.n ? 'Runda ' + pad(active.n) + ' · ' : '') + active.name
-    : '—';
-  if (kickEl) {
-    kickEl.textContent = active && active.live
-      ? t('next.live') + (active.seriesLabel ? ' · ' + active.seriesLabel : '')
-      : ((active && active.seriesLabel) || t('next.kicker'));
-    kickEl.classList.toggle('is-live', !!(active && active.live));
+  serieNaPasku = PS.stanSerii().filter(function (s) { return s.glowna; });
+
+  if (!serieNaPasku.length) {
+    box.innerHTML = '<div class="nr"><div class="nr__co"><p class="mono dim">' + esc(t('next.kicker')) +
+                    '</p><p class="nr__nazwa">' + esc(t('next.soon')) + '</p></div></div>';
+    return;
   }
 
-  /* Gdy runda trwa (np. cały tydzień), obok pokazujemy, kiedy startuje
-     kolejna — inaczej pasek na cały ten czas przestaje cokolwiek mówić. */
-  var potemEl = $('#nrPotem');
-  if (potemEl) {
-    var potem = active && active.live ? PS.nastepnaPo(active) : null;
-    potemEl.hidden = !potem;
-    if (potem) {
-      var dni = potem.start ? Math.max(0, Math.ceil((potem.start.getTime() - Date.now()) / 86400000)) : 0;
-      potemEl.textContent = t('next.after') + ': ' + potem.name +
-        (potem.start ? ' · ' + t('next.afterIn') + ' ' + dni + ' ' + t(dni === 1 ? 'd1' : 'd') : '');
+  box.innerHTML = serieNaPasku.map(function (s, i) {
+    var r = s.glowna;
+    var trwa = r.live;
+    var status = trwa ? t('next.live') : t('next.kicker');
+
+    var potem = '';
+    if (trwa && s.potem) {
+      potem = '<p class="mono nr__potem">' + esc(t('next.after')) + ': ' + esc(s.potem.name) +
+              (s.potem.start ? ' · <span data-za="' + i + '"></span>' : '') + '</p>';
     }
-  }
 
-  if (icsEl) {
-    var maDate = !!(active && active.start);
-    icsEl.hidden = !maDate;
-    if (maDate) {
-      icsEl.href = PS.icsUrl(active);
-      icsEl.download = 'project-simracing.ics';
-      $('.btn__t', icsEl).textContent = t('next.ics');
-    }
-  }
+    var ics = r.start
+      ? '<a class="btn btn--ghost btn--sm nr__ics" href="' + PS.icsUrl(r) + '" download="project-simracing.ics">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M3.5 9h17M4.5 5.5h15v15h-15z"/></svg>' +
+        '<span class="btn__t">' + esc(t('next.ics')) + '</span></a>'
+      : '';
+
+    return '<div class="nr' + (trwa ? ' is-live' : '') + '" style="--kolor:' + PS.kolorSerii(s.seria) + '">' +
+             '<div class="nr__co">' +
+               '<p class="mono nr__kick"><span class="nr__stan">' + esc(status) + '</span>' +
+                 (s.etykieta ? '<span class="nr__seria">' + esc(s.etykieta) + '</span>' : '') + '</p>' +
+               '<p class="nr__nazwa">' + (r.n ? 'Runda ' + pad(r.n) + ' · ' : '') + esc(r.name) + '</p>' +
+               potem +
+             '</div>' +
+             '<div class="nr__kiedy">' +
+               '<p class="mono dim" data-etyk="' + i + '"></p>' +
+               '<p class="nr__zegar" data-zegar="' + i + '" aria-live="off">—</p>' +
+               '<p class="mono dim">' + esc(PS.dateRange(r.start, r.end) || '') + '</p>' +
+             '</div>' +
+             ics +
+           '</div>';
+  }).join('');
+
   tickCountdown();
 }
 
 function tickCountdown () {
-  var clockEl = $('#nrClock'), labelEl = $('#nrLabel'), dateEl = $('#nrDate');
-  if (!clockEl) return;
-
-  if (!active || !active.start) {
-    labelEl.textContent = '';
-    clockEl.textContent = t('next.soon');
-    clockEl.classList.add('is-soft');
-    dateEl.textContent = '';
-    return;
-  }
-
   var teraz = Date.now();
-  var diff = active.start.getTime() - teraz;
+  serieNaPasku.forEach(function (s, i) {
+    var r = s.glowna;
+    var zegar = $('[data-zegar="' + i + '"]');
+    var etyk = $('[data-etyk="' + i + '"]');
+    if (!zegar) return;
 
-  /* Wydarzenie w trakcie: odliczamy do jego końca, a nie do startu. */
-  if (diff <= 0 && active.end && active.end.getTime() > teraz) {
-    diff = active.end.getTime() - teraz;
-    labelEl.textContent = t('next.left');
-    clockEl.classList.remove('is-soft');
-    var sc = Math.floor(diff / 1000);
-    var dc = Math.floor(sc / 86400); sc -= dc * 86400;
-    var hc = Math.floor(sc / 3600);  sc -= hc * 3600;
-    var mc = Math.floor(sc / 60);    sc -= mc * 60;
-    clockEl.textContent = (dc > 0 ? dc + ' ' + t(dc === 1 ? 'd1' : 'd') + ' · ' : '') +
-                          pad(hc) + ':' + pad(mc) + ':' + pad(sc);
-    dateEl.textContent = PS.dateRange(active.start, active.end);
-    return;
-  }
+    if (!r.start) {
+      etyk.textContent = '';
+      zegar.textContent = t('next.soon');
+      zegar.classList.add('is-soft');
+    } else if (r.live && r.end) {
+      etyk.textContent = t('next.left');
+      zegar.textContent = PS.odliczanie(r.end.getTime() - teraz);
+      zegar.classList.remove('is-soft');
+    } else if (r.start.getTime() <= teraz) {
+      etyk.textContent = '';
+      zegar.textContent = t('next.live');
+      zegar.classList.add('is-soft');
+    } else {
+      etyk.textContent = t('next.in');
+      zegar.textContent = PS.odliczanie(r.start.getTime() - teraz);
+      zegar.classList.remove('is-soft');
+    }
 
-  if (diff <= 0) {
-    labelEl.textContent = '';
-    clockEl.textContent = t('next.live');
-    clockEl.classList.add('is-soft');
-  } else {
-    var s = Math.floor(diff / 1000);
-    var d = Math.floor(s / 86400); s -= d * 86400;
-    var h = Math.floor(s / 3600);  s -= h * 3600;
-    var m = Math.floor(s / 60);    s -= m * 60;
-    labelEl.textContent = t('next.in');
-    clockEl.classList.remove('is-soft');
-    clockEl.textContent = (d > 0 ? d + ' ' + t(d === 1 ? 'd1' : 'd') + ' · ' : '') + pad(h) + ':' + pad(m) + ':' + pad(s);
-  }
+    var za = $('[data-za="' + i + '"]');
+    if (za && s.potem && s.potem.start) {
+      var dni = Math.max(0, Math.ceil((s.potem.start.getTime() - teraz) / 86400000));
+      za.textContent = t('next.afterIn') + ' ' + dni + ' ' + t(dni === 1 ? 'd1' : 'd');
+    }
 
-  dateEl.textContent = PS.dateRange(active.start, active.end);
+    /* Runda właśnie się skończyła albo zaczęła — przestawiamy pasek. */
+    if ((r.live && r.end && r.end.getTime() <= teraz) ||
+        (!r.live && r.start && r.start.getTime() <= teraz && r.end && r.end.getTime() > teraz)) {
+      renderNextRound();
+    }
+  });
 }
 
 /* ------------------------------------------------------------------
