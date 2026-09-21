@@ -16,8 +16,6 @@ Administracja także dołożyła swoje trzy grosze, jeśli chodzi o wyjątkowoś
 
 Pierwszą rundą ostatniej kampanii był szybki Rajd Łotwy, rozgrywany przy dobrych warunkach i nieliczący zbyt wielu kilometrów oesowych. Podobnie jak w każdym rajdzie sezonu, na zawodników czekało 6 prób sportowych. Było jednak pewne utrudnienie - większość pierwszej pętli imprezy rozgrywana była po zachodzie słońca.
 
-Drugim zawodnikiem klasyfikacji PSR1 został AdamRacer i przypieczętował swój doskonały wynik zwycięstwem w Rajdzie Sardynii, gdzie pokonał Tomasza Ciborka o 12 sekund. Dla Adama oznacza to także najlepszy wynik w sezonie oraz powrót na podium, po trwającej od Rajdu Szwecji przerwie.
-
 ![](Michał Król - Skoda Fabia RS w drodze po komplet odcinków.webp)
 
 ## Czołówka: Katana, Norbert, Letar
