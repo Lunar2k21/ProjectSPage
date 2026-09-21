@@ -46,6 +46,7 @@ datę z nazwy folderu, opis z pierwszego akapitu, miniaturkę z pierwszego
 obrazu.
 """
 
+import hashlib
 import io
 import json
 import os
@@ -734,6 +735,42 @@ def sitemap(out, wszystkie):
     io.open(os.path.join(out, 'sitemap.xml'), 'w', encoding='utf-8').write('\n'.join(czesci) + '\n')
 
 
+def wersjonuj(out):
+    """Dopisuje ?v=<skrót zawartości> do odnośników na assets/js i assets/css
+    we wszystkich stronach .html. Przeglądarka trzyma te pliki w pamięci
+    podręcznej, więc bez tego po zmianie config.js czytelnik jeszcze przez
+    jakiś czas widzi starą wersję. Skrót zmienia się tylko wtedy, gdy plik
+    naprawdę się zmienił, więc niezmienione pliki dalej są brane z pamięci.
+    Działa tylko przy budowaniu do osobnego folderu (--out) — źródłowe
+    index.html i reszta w repozytorium zostają nietknięte."""
+    wzor = re.compile(r'((?:\.\./)*)(assets/(?:js|css)/[\w.-]+\.(?:js|css))(["\'])')
+    skroty = {}
+
+    def skrot(sciezka):
+        if sciezka not in skroty:
+            plik = os.path.join(out, sciezka)
+            skroty[sciezka] = (hashlib.md5(open(plik, 'rb').read()).hexdigest()[:8]
+                               if os.path.isfile(plik) else '')
+        return skroty[sciezka]
+
+    def podmien(m):
+        v = skrot(m.group(2))
+        return m.group(0) if not v else '%s%s?v=%s%s' % (m.group(1), m.group(2), v, m.group(3))
+
+    ile = 0
+    for kat, _, pliki in os.walk(out):
+        for nazwa in pliki:
+            if not nazwa.endswith('.html'):
+                continue
+            sciezka = os.path.join(kat, nazwa)
+            tekst = io.open(sciezka, encoding='utf-8').read()
+            nowy = wzor.sub(podmien, tekst)
+            if nowy != tekst:
+                io.open(sciezka, 'w', encoding='utf-8').write(nowy)
+                ile += 1
+    print('  wersje plików js/css dopisane w %d stronach' % ile)
+
+
 # ----------------------------------------------------------------------
 def main():
     # Bez --out budujemy „u siebie": strony artykułów i regulaminów
@@ -796,6 +833,8 @@ def main():
         wszystkie += dokumenty
 
     sitemap(out, wszystkie)
+    if not w_miejscu:
+        wersjonuj(out)
     print('Gotowe — dokumentów: %d.' % len(wszystkie))
     if w_miejscu:
         print('Strony artykułów i regulaminów leżą teraz obok index.html.')
