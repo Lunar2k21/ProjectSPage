@@ -43,13 +43,13 @@ window.PS_CONFIG = {
     {
       id: 'lmu',
       image: 'lmu',
-      kicker: { pl: 'Le Mans Ultimate · Sezon 0', en: 'Le Mans Ultimate · Season 0' },
-      title:  { pl: 'Wyścigi<br>długodystansowe', en: 'Endurance<br>racing' },
-      desc:   { pl: 'Bahrajn, Katar, Włochy, Algarve — pełne obsady GT3 i hypercar.',
-                en: 'Bahrain, Qatar, Italy, Algarve — full GT3 and hypercar grids.' },
+      kicker: { pl: 'Le Mans Ultimate · Seasonal Cup · Sezon 1', en: 'Le Mans Ultimate · Seasonal Cup · Season 1' },
+      title:  { pl: 'Sześć rund,<br>dwie klasy', en: 'Six rounds,<br>two classes' },
+      desc:   { pl: 'LMGT3 i LMP2 ELMS. Start 2 października w Spa, co dwa tygodnie o 19:00.',
+                en: 'LMGT3 and LMP2 ELMS. Lights out 2 October at Spa, every two weeks at 19:00.' },
       actions: [
-        { label: { pl: 'Aktualny sezon', en: 'Current season' }, href: 'https://www.thesimgrid.com/championships/22373', primary: true, external: true },
-        { label: { pl: 'Klasyfikacja', en: 'Standings' }, href: 'https://www.thesimgrid.com/championships/22373/standings', external: true }
+        { label: { pl: 'Zapisz się', en: 'Sign up' }, href: 'https://www.thesimgrid.com/championships/27647', primary: true, external: true },
+        { label: { pl: 'Zapowiedź sezonu', en: 'Season preview' }, href: 'artykuly/lmu-seasonal-cup/' }
       ]
     },
     {
@@ -116,7 +116,7 @@ window.PS_CONFIG = {
   /* Etykieta serii pokazywana przy najbliższej rundzie. */
   seriesLabel: {
     wrc: { pl: 'EA Sports WRC · Sezon 15', en: 'EA Sports WRC · Season 15' },
-    lmu: { pl: 'Le Mans Ultimate · Sezon 0', en: 'Le Mans Ultimate · Season 0' },
+    lmu: { pl: 'Le Mans Ultimate · Seasonal Cup · Sezon 1', en: 'Le Mans Ultimate · Seasonal Cup · Season 1' },
     fh6: { pl: 'Forza Horizon 6 · Sezon 0', en: 'Forza Horizon 6 · Season 0' }
   },
 
@@ -152,8 +152,10 @@ window.PS_CONFIG = {
       title: { pl: 'Le Mans Ultimate', en: 'Le Mans Ultimate' },
       links: [
         { label: { pl: 'Profil społeczności', en: 'Community profile' }, href: 'https://www.thesimgrid.com/communities/project-simracing' },
-        { label: { pl: 'Aktualny sezon', en: 'Current season' }, href: 'https://www.thesimgrid.com/championships/22373' },
-        { label: { pl: 'Klasyfikacja', en: 'Standings' }, href: 'https://www.thesimgrid.com/championships/22373/standings' }
+        { label: { pl: 'Seasonal Cup — Sezon 1', en: 'Seasonal Cup — Season 1' }, href: 'https://www.thesimgrid.com/championships/27647', tag: { pl: 'zapisy', en: 'sign-up' } },
+        { label: { pl: 'Klasyfikacja Seasonal Cup', en: 'Seasonal Cup standings' }, href: 'https://www.thesimgrid.com/championships/27647/standings' },
+        { label: { pl: 'RaceControl', en: 'RaceControl' }, href: 'https://www.racecontrol.gg/' },
+        { label: { pl: 'Archiwum — Sezon 0', en: 'Archive — Season 0' }, href: 'https://www.thesimgrid.com/championships/22373' }
       ]
     },
     {
@@ -224,7 +226,7 @@ window.PS_CONFIG = {
     {
       id: 'lmu',
       label:  'Le Mans Ultimate',
-      season: { pl: 'Sezon 0', en: 'Season 0' },
+      season: { pl: 'Seasonal Cup · Sezon 1', en: 'Seasonal Cup · Season 1' },
       sheetUrl: '',
       source: { type: '', url: '' }
     },
