@@ -59,9 +59,9 @@ Dziesiątkę zamknął ligowy debiutant, kierowca o nicku **rallycelica**. Obok 
 
 Tuż za TOP10 znalazł się now_ikk, zwycięzca klasyfikacji PSR3 z poprzedniego sezonu. Jego forma zdaje się jeszcze rosnąć - mimo awansu o dywizję wyżej zajął drugą pozycję w PSR2. 12. miejsce to Cheetack, który bardzo dobrze spisywał się w drugiej połowie poprzedniego sezonu, osiągając najlepsze wyniki w rajdach asfaltowych. Kolejnym debiutantem w ligowych zmaganiach był Kaczy, który od razu zaprezentował się z dobrej strony, meldując się na mecie jako trzynasty. Po przerwie pod koniec poprzedniego sezonu z przytupem wrócił do rywalizacji Harwester, zajmując 14. lokatę.
 
-15. miejsce należało do zwycięzcy „generalki” Sezonu 14. - Tomasza Ciborka. Pokerowa zagrywka z brakiem zapasowych opon nie opłaciła się Tomkowi: przebił jedną z nich, wjeżdżając do rowu. Znając jednak jego tempo, na pewno zrehabilituje się przy pierwszej możliwej okazji.
+Piętnaste miejsce należało do zwycięzcy „generalki” Sezonu 14. - Tomasza Ciborka. Pokerowa zagrywka z brakiem zapasowych opon nie opłaciła się Tomkowi: przebił jedną z nich, wjeżdżając do rowu. Znając jednak jego tempo, na pewno zrehabilituje się przy pierwszej możliwej okazji.
 
-16. pozycja to kolejny mocny ligowy debiut - Godzio. 17. był Młynson, który jako jeden z niewielu zdecydował się na konstrukcję inną niż dwie najpopularniejsze i dobry wynik wywalczył za kierownicą Forda Fiesty. 18. miejsce należało do Olexa, który startuje w lidze od bardzo wielu sezonów i niezależnie od klasy potrafi solidnie zapunktować, zawsze dowożąc wynik do mety. 19. Martinez przebił swoim wynikiem wszystkie rezultaty z Sezonu 14. Dwudziestkę zamknął Skuciu, dla którego także był to pierwszy ligowy występ.
+Szesnasta pozycja to kolejny mocny ligowy debiut - Godzio. 17. był Młynson, który jako jeden z niewielu zdecydował się na konstrukcję inną niż dwie najpopularniejsze i dobry wynik wywalczył za kierownicą Forda Fiesty. 18. miejsce należało do Olexa, który startuje w lidze od bardzo wielu sezonów i niezależnie od klasy potrafi solidnie zapunktować, zawsze dowożąc wynik do mety. 19. Martinez przebił swoim wynikiem wszystkie rezultaty z Sezonu 14. Dwudziestkę zamknął Skuciu, dla którego także był to pierwszy ligowy występ.
 
 ![](Hyundai i20 N na szutrowym odcinku.png)
 
