@@ -2,7 +2,7 @@
 tytul: Rajd Łotwy - Katana otwiera finałowy sezon
 data: 2026-09-21
 opis: Pierwsza runda ostatniego sezonu EA Sports WRC w Project Simracing. Michał „Katana” Król wygrywa wszystkie odcinki, Norbert traci tylko 7 sekund, a RacersPL obejmuje prowadzenie w klasyfikacji zespołowej.
-miniatura: Toyota GR Yaris na łotewskim szutrze.png
+miniatura: Michał Król - Skoda Fabia RS w drodze po komplet odcinków.webp
 seria: wrc
 ---
 
