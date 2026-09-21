@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+
+<title>Wyniki LMU z pliku — Project Simracing</title>
+<meta name="description" content="Narzędzie ligi: wyniki wyścigu Le Mans Ultimate z pliku XML — tabela, grafika do pobrania i dane do arkusza.">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://projectsimracing.pl/lmu.html">
+<link rel="alternate" hreflang="pl" href="https://projectsimracing.pl/lmu.html">
+<link rel="alternate" hreflang="en" href="https://projectsimracing.pl/lmu.html?lang=en">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Project Simracing">
+<meta property="og:url" content="https://projectsimracing.pl/lmu.html">
+<meta property="og:title" content="Wyniki i klasyfikacje — Project Simracing">
+<meta property="og:description" content="Wyniki rund i klasyfikacje sezonu, prosto z arkuszy ligowych.">
+<meta property="og:image" content="https://projectsimracing.pl/assets/img/hero/wrc-1920.webp">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/brand/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/img/brand/favicon-16.png">
+<link rel="apple-touch-icon" href="assets/img/brand/apple-touch-icon.png">
+
+<!-- Nagłówki i tekst widoczny od razu; reszta krojów dojeżdża sama. -->
+<link rel="preload" as="font" type="font/woff2" crossorigin
+      href="assets/fonts/saira-condensed-800.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin
+      href="assets/fonts/barlow-400.woff2">
+<link rel="stylesheet" href="assets/css/style.css">
+
+<script>
+(function(){try{var t=localStorage.getItem('ps-theme');
+if(!t)t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
+document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+</script>
+</head>
+
+<body data-strona="wyniki">
+<a class="skip" href="#main" data-i18n="skip">Przejdź do treści</a>
+
+<header class="topbar" id="topbar">
+  <div class="shell topbar__in">
+    <a class="brand" href="index.html" aria-label="Project Simracing — strona główna">
+      <picture>
+        <source srcset="assets/img/brand/logo.webp" type="image/webp">
+        <img src="assets/img/brand/logo.png" width="2500" height="236" alt="Project Simracing">
+      </picture>
+    </a>
+
+    <nav class="nav" id="navMain" aria-label="Nawigacja główna">
+      <a href="index.html#hub">Odnośniki</a>
+      <a href="wyniki.html" class="is-on">Wyniki</a>
+    </nav>
+
+    <div class="topbar__tools">
+      <div class="seg" role="group" aria-label="Język">
+        <button type="button" class="seg__btn is-on" data-lang="pl" aria-pressed="true">PL</button>
+        <button type="button" class="seg__btn" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <button type="button" class="icobtn" id="themeBtn" aria-label="Przełącz motyw" title="Przełącz motyw">
+        <svg class="ico-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.6"/><path d="M12 1.6v3M12 19.4v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1.6 12h3M19.4 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+        <svg class="ico-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+      <a class="btn btn--primary topbar__cta" href="https://discord.gg/R3Tu68jWwK" target="_blank" rel="noopener">Discord</a>
+      <button type="button" class="icobtn burger" id="burger" aria-label="Menu" aria-expanded="false" aria-controls="mobnav">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+    </div>
+  </div>
+  <nav class="mobnav" id="mobnav" aria-label="Nawigacja mobilna" hidden></nav>
+</header>
+
+<main id="main">
+
+<section class="rhead">
+  <div class="shell">
+    <h1>Wyniki LMU z pliku</h1>
+    <p class="rhead__sub">Tabela, przebieg wyścigu, statystyki i klasyfikacja sezonu z plików gry. Zapowiedzi i kalendarz zrobisz w <a class="lmu-link" href="grafiki.html">generatorze grafik →</a></p>
+  </div>
+</section>
+
+<div class="shell lmu">
+
+  <!-- 1. Wczytanie pliku -->
+  <label class="lmu-wrzut" id="lmuWrzut">
+    <input type="file" id="lmuPlik" accept=".xml,text/xml" multiple hidden>
+    <span class="lmu-wrzut__ikona" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M12 16V4M7.5 8.5 12 4l4.5 4.5M4.5 15v5h15v-5"/></svg>
+    </span>
+    <span class="lmu-wrzut__tytul">Upuść tutaj pliki wyników z Le Mans Ultimate</span>
+    <span class="lmu-wrzut__opis mono dim">albo kliknij, żeby wybrać · pliki .xml z folderu gry UserData/Log/Results · kilka wyścigów naraz = klasyfikacja sezonu</span>
+  </label>
+  <p class="lmu-przyklad"><button type="button" class="more" id="lmuPrzyklad">Wczytaj plik przykładowy →</button></p>
+  <p class="notice notice--error" id="lmuBlad" hidden></p>
+
+  <!-- 2. Ustawienia i wynik -->
+  <div id="lmuWynik" hidden>
+    <div class="lmu-pliki" id="lmuPliki"></div>
+
+    <div class="lmu-ust">
+      <label class="lmu-pole"><span class="mono dim">Seria</span>
+        <input type="text" id="lmuSeria"></label>
+      <label class="lmu-pole"><span class="mono dim">Runda</span>
+        <select id="lmuRunda"></select></label>
+      <label class="lmu-pole lmu-pole--szer"><span class="mono dim">Tytuł na grafice</span>
+        <input type="text" id="lmuTytul"></label>
+      <label class="lmu-check"><input type="checkbox" id="lmuPunkty" checked> <span>Punkty</span></label>
+      <label class="lmu-check"><input type="checkbox" id="lmuNagrodyCh" checked> <span>Wyróżnienia</span></label>
+    </div>
+
+    <details class="lmu-nazwy">
+      <summary><span>Poprawne zapisy nazwisk</span> <span class="mono dim">gra zapisuje nazwy bez polskich znaków — tu je poprawisz</span></summary>
+      <div class="lmu-nazwy__in">
+        <p class="dim">Jedna linia na osobę: <code>Michal Krol = Michał Król</code>. Działa od razu — na stronie, grafice,
+          w arkuszu i klasyfikacji. Tak samo poprawisz nazwę zespołu. Lista zapamiętuje się w tej przeglądarce;
+          żeby działała u wszystkich, pobierz plik i wrzuć go do repozytorium jako <code>assets/js/lmu-kierowcy.js</code>.</p>
+        <textarea id="lmuNazwy" rows="8" spellcheck="false" placeholder="Michal Krol = Michał Król"></textarea>
+        <div class="lmu-nazwy__akcje">
+          <button type="button" class="more" id="lmuNazwyDodaj">Dopisz kierowców z wczytanych plików →</button>
+          <button type="button" class="more" id="lmuNazwyPobierz">Pobierz plik z listą →</button>
+        </div>
+      </div>
+    </details>
+
+    <div class="lmu-akcje">
+      <button type="button" class="btn btn--primary" id="lmuPng"><span class="btn__t">Pobierz grafikę PNG</span></button>
+      <button type="button" class="btn btn--ghost" id="lmuArkusz"><span class="btn__t">Kopiuj do arkusza</span></button>
+      <button type="button" class="btn btn--ghost btn--sm" id="lmuCsv"><span class="btn__t">CSV</span></button>
+      <button type="button" class="btn btn--ghost btn--sm" id="lmuJson"><span class="btn__t">JSON</span></button>
+      <span class="mono dim lmu-akcje__info" id="lmuInfo"></span>
+    </div>
+
+    <div class="rounds lmu-zakl" id="lmuZakl" role="tablist">
+      <button type="button" class="round" data-z="wyniki" role="tab">Wyniki</button>
+      <button type="button" class="round" data-z="przebieg" role="tab">Przebieg wyścigu</button>
+      <button type="button" class="round" data-z="okrazenia" role="tab">Okrążenia i sektory</button>
+      <button type="button" class="round" data-z="incydenty" role="tab">Incydenty</button>
+      <button type="button" class="round" data-z="sezon" role="tab">Klasyfikacja sezonu</button>
+    </div>
+
+    <div id="lmuPodglad"></div>
+  </div>
+
+</div>
+
+</main>
+
+<footer class="foot">
+  <div class="shell foot__in">
+    <picture class="foot__logo">
+      <source srcset="assets/img/brand/logo.webp" type="image/webp">
+      <img src="assets/img/brand/logo.png" width="2500" height="236" alt="Project Simracing">
+    </picture>
+    <p class="mono dim foot__copy">© <span id="year">2026</span> Project Simracing · projectsimracing.pl</p>
+    <nav class="foot__social" aria-label="Media społecznościowe">
+      <a href="https://discord.gg/R3Tu68jWwK" target="_blank" rel="noopener">Discord</a>
+      <a href="https://www.youtube.com/@ProjectSimracingpl" target="_blank" rel="noopener">YouTube</a>
+      <a href="https://www.facebook.com/ProjectSimracing/" target="_blank" rel="noopener">Facebook</a>
+      <a href="https://patronite.pl/projectsimracing" target="_blank" rel="noopener">Patronite</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="assets/js/config.js"></script>
+<script src="assets/js/kalendarz.js"></script>
+<script src="assets/js/zrodla.js"></script>
+<script src="assets/js/core.js"></script>
+<script src="assets/js/lmu-zasoby.js"></script>
+<script src="assets/js/lmu-kierowcy.js"></script>
+<script src="assets/js/lmu.js"></script>
+</body>
+</html>

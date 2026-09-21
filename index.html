@@ -151,22 +151,11 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
 </section>
 
 <!-- ======================= PASEK NAJBLIŻSZEJ RUNDY ======================= -->
-<section class="nextround" id="nextround" aria-label="Najbliższa runda">
-  <div class="shell nextround__in">
-    <div class="nextround__what">
-      <p class="mono dim" id="nrKicker" data-i18n="next.kicker">Najbliższa runda</p>
-      <p class="nextround__name" id="nrName">—</p>
-      <p class="mono nextround__potem" id="nrPotem" hidden></p>
-    </div>
-    <div class="nextround__when">
-      <p class="mono dim" id="nrLabel" data-i18n="next.in">Start za</p>
-      <p class="nextround__clock" id="nrClock" aria-live="off">—</p>
-      <p class="mono dim" id="nrDate"></p>
-    </div>
-    <a class="btn btn--ghost btn--sm nextround__ics" id="nrIcs" href="#" hidden>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M3.5 9h17M4.5 5.5h15v15h-15z"/></svg>
-      <span class="btn__t">Dodaj do kalendarza</span>
-    </a>
+<section class="nextround" id="nextround" aria-label="Najbliższe rundy">
+  <!-- Wiersz na każdą serię: runda w trakcie albo najbliższa przed nami.
+       Wypełnia go app.js na podstawie terminarza. -->
+  <div class="shell nextround__lista" id="nrLista">
+    <div class="nr"><div class="nr__co"><p class="mono dim">Najbliższa runda</p><p class="nr__nazwa">—</p></div></div>
   </div>
 </section>
 
