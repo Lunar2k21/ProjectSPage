@@ -162,6 +162,95 @@ def komorki(linia):
     return [c.strip() for c in linia.split('|')]
 
 
+# ----------------------------------------------------------------------
+# listy
+# ----------------------------------------------------------------------
+# Znaczniki punktów:  „- ”, „* ”, „+ ”, „– ”, „• ”  -> lista punktowana
+#                     „1. ”, „1) ”                  -> lista numerowana
+#                     „a) ”                         -> lista literowa
+# Wcięcie (spacje przed znacznikiem) decyduje o zagnieżdżeniu.
+ZNACZNIK_RE = re.compile(r'^( *)(?:([-*+\u2013\u2022])|(\d+)[.)]|([a-z])\))\s+(.*)$')
+
+
+def znacznik(linia):
+    """(wcięcie, rodzaj, numer, tekst) albo None. rodzaj: ul / ol / ola."""
+    m = ZNACZNIK_RE.match(linia.expandtabs(4))
+    if not m:
+        return None
+    wc = len(m.group(1))
+    if m.group(2):
+        return (wc, 'ul', None, m.group(5))
+    if m.group(3):
+        return (wc, 'ol', int(m.group(3)), m.group(5))
+    return (wc, 'ola', ord(m.group(4)) - 96, m.group(5))
+
+
+def jako_akapit(linie, i, z):
+    """Linia typu „15. miejsce należało do…” to zdanie, a nie lista:
+    pojedynczy punkt, numer inny niż 1 i tekst od małej litery."""
+    if z[1] != 'ol' or z[2] == 1 or not z[3][:1].islower():
+        return False
+    nast = znacznik(linie[i + 1]) if i + 1 < len(linie) else None
+    return not (nast and nast[1] == 'ol' and nast[0] == z[0])
+
+
+def przerywa_akapit(linia):
+    g = linia.strip()
+    if re.match(r'^(#{1,4}\s|>|\|)', g) or OBRAZ_RE.match(g):
+        return True
+    z = znacznik(linia)
+    # jak w CommonMark: akapit przerywa punktor albo lista od „1.” / „a)”
+    return bool(z) and (z[1] == 'ul' or z[2] == 1)
+
+
+def odescapuj(tekst):
+    """„15\\. miejsce” -> „15. miejsce” (sposób na wymuszenie akapitu)."""
+    return re.sub(r'^(\d+)\\\.', r'\1.', tekst)
+
+
+def lista(linie, i):
+    """Składa listę od linii i. Zwraca (html, indeks pierwszej linii po liście).
+    Puste linie między punktami nie rozbijają listy, głębiej wcięte punkty
+    stają się podlistą poprzedniego punktu, a numer pierwszego punktu
+    trafia do atrybutu start — „3.” pokaże się jako 3, nie jako 1."""
+    baza, rodzaj, start, _ = znacznik(linie[i])
+    punkty = []                                   # [tekst, [podlisty]]
+    while i < len(linie):
+        z = znacznik(linie[i])
+        if z:
+            if z[0] == baza and z[1] == rodzaj:
+                punkty.append([z[3].strip(), []])
+                i += 1
+                continue
+            if z[0] > baza and punkty:
+                html, i = lista(linie, i)
+                punkty[-1][1].append(html)
+                continue
+            break
+        if not linie[i].strip():
+            j = i
+            while j < len(linie) and not linie[j].strip():
+                j += 1
+            nast = znacznik(linie[j]) if j < len(linie) else None
+            if nast and punkty and ((nast[0] == baza and nast[1] == rodzaj) or nast[0] > baza):
+                i = j
+                continue
+            break
+        if linie[i][:1] in ' \t' and punkty:            # dalszy ciąg punktu
+            punkty[-1][0] += ' ' + linie[i].strip()
+            i += 1
+            continue
+        break
+
+    tag = 'ul' if rodzaj == 'ul' else 'ol'
+    atr = ' type="a"' if rodzaj == 'ola' else ''
+    if rodzaj != 'ul' and start and start != 1:
+        atr += ' start="%d"' % start
+    html = '<%s%s>%s</%s>' % (tag, atr, ''.join(
+        '<li>%s%s</li>' % (inline(t), ''.join(pod)) for t, pod in punkty), tag)
+    return html, i
+
+
 def parsuj(tekst):
     """Markdown -> lista bloków."""
     linie = tekst.replace('\r\n', '\n').split('\n')
@@ -216,38 +305,21 @@ def parsuj(tekst):
             bloki.append({'t': 'quote', 'x': inline(' '.join(czesci))})
             continue
 
-        # listy
-        punkt = re.match(r'^\s*[-*+]\s+(.*)$', l)
-        numer = re.match(r'^\s*\d+[.)]\s+(.*)$', l)
-        if punkt or numer:
-            rodzaj = 'ol' if numer else 'ul'
-            elementy = []
-            while i < len(linie):
-                p = re.match(r'^\s*[-*+]\s+(.*)$', linie[i])
-                n = re.match(r'^\s*\d+[.)]\s+(.*)$', linie[i])
-                if p or n:
-                    if (n and rodzaj == 'ul') or (p and rodzaj == 'ol'):
-                        break
-                    elementy.append((p or n).group(1).strip())
-                    i += 1
-                elif linie[i].strip() and linie[i][:1] in ' \t' and elementy:
-                    elementy[-1] += ' ' + linie[i].strip()      # dalszy ciąg punktu
-                    i += 1
-                else:
-                    break
-            bloki.append({'t': rodzaj, 'items': [inline(e) for e in elementy]})
+        # listy (także z pustymi liniami między punktami i z podpunktami)
+        z = znacznik(l)
+        if z and not jako_akapit(linie, i, z):
+            html, i = lista(linie, i)
+            bloki.append({'t': 'lista', 'html': html})
             continue
 
-        # akapit
-        czesci = []
-        while i < len(linie) and linie[i].strip() and not re.match(r'^(#{1,4}\s|\s*[-*+]\s|\s*\d+[.)]\s|>|\|)', linie[i]) \
-                and not OBRAZ_RE.match(linie[i].strip()):
-            czesci.append(linie[i].strip())
+        # akapit — pierwszą linię bierzemy zawsze, kolejne dopóki coś
+        # nie przerwie akapitu (pusta linia, nagłówek, lista od „1.”, tabela…)
+        czesci = [odescapuj(l.strip())]
+        i += 1
+        while i < len(linie) and linie[i].strip() and not przerywa_akapit(linie[i]):
+            czesci.append(odescapuj(linie[i].strip()))
             i += 1
-        if czesci:
-            bloki.append({'t': 'p', 'x': inline(' '.join(czesci)), 'txt': ' '.join(czesci)})
-        else:
-            i += 1
+        bloki.append({'t': 'p', 'x': inline(' '.join(czesci)), 'txt': ' '.join(czesci)})
 
     return bloki
 
@@ -395,6 +467,8 @@ def zbuduj_dokument(dok, out):
             czesci.append('<h2 id="%s">%s</h2>' % (esc(kotwica(b.get('txt') or '')), b['x']))
         elif t == 'p':
             czesci.append('<p>%s</p>' % b['x'])
+        elif t == 'lista':
+            czesci.append(b['html'])
         elif t in ('ul', 'ol'):
             czesci.append('<%s>%s</%s>' % (t, ''.join('<li>%s</li>' % i for i in b['items']), t))
         elif t == 'quote':
@@ -419,6 +493,12 @@ def zbuduj_dokument(dok, out):
     # miniaturka: wskazana w nagłówku pliku albo pierwszy obraz dokumentu
     mini = ''
     zrodlo_mini = dok['miniatura'] or (dok['obrazy'][0] if dok['obrazy'] else '')
+    # miniatura wskazuje plik, którego nie ma (np. po podmianie zdjęć) —
+    # zamiast pustego kafelka bierzemy pierwszy obraz z folderu
+    if zrodlo_mini and not os.path.isfile(os.path.join(dok['folder'], zrodlo_mini)):
+        zastepcza = dok['obrazy'][0] if dok['obrazy'] else ''
+        print('     ! miniatura "%s" nie istnieje — biorę %s' % (zrodlo_mini, zastepcza or 'nic'))
+        zrodlo_mini = zastepcza
     if zrodlo_mini:
         if zrodlo_mini not in mapa:
             wynik = przerob_obraz(os.path.join(dok['folder'], zrodlo_mini), kat_obrazy, zrodlo_mini)
@@ -477,6 +557,7 @@ def strona_dokumentu(dok, sz):
 
     slow = sum(len(b.get('txt', '').split()) for b in dok['bloki'] if b['t'] in ('p', 'h1', 'h2', 'h3'))
     slow += sum(len(' '.join(b.get('items', [])).split()) for b in dok['bloki'] if b['t'] in ('ul', 'ol'))
+    slow += sum(len(re.sub(r'<[^>]+>', ' ', b['html']).split()) for b in dok['bloki'] if b['t'] == 'lista')
     minuty = max(1, int(round(slow / 200.0)))
 
     meta = [data_pl(dok['data']), '%d min czytania' % minuty]
