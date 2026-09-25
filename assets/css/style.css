@@ -1105,6 +1105,11 @@ td.pts { font-weight: 500; }
 }
 .dok__body ol { list-style: decimal; }
 .dok__body ol li::marker { color: var(--dim); font-family: var(--f-mono); font-size: 13px; }
+/* podpunkty: lista w punkcie listy, bez dolnego marginesu i trochę ciaśniej;
+   „a)” — lista literowa (atrybut type sam nie wystarczy, bo reguła wyżej
+   ustawia list-style: decimal) */
+.dok__body li > ol, .dok__body li > ul { margin: 7px 0 2px; gap: 5px; }
+.dok__body ol[type="a"] { list-style: lower-alpha; }
 
 /* --- obraz w dokumencie ---------------------------------------
    Cienka ramka, a nad nią równoległobok z tytułem — ten sam kształt
