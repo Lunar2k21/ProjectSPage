@@ -54,6 +54,22 @@ var MARKI = [
   ['Ginetta', 'ginetta'], ['ADESS', 'adess'], ['Chevrolet', 'chevrolet']
 ];
 
+/* Gdy w folderze nie ma akurat tego malowania (własny skin, nowość
+   z gry), pokazujemy ogólny render modelu — gra trzyma je pod nazwami
+   397_<rok>_<model>. Tu dopasowanie z nazwy auta na taki model. */
+var MODELE = [
+  ['bmw m hybrid', 'BMWMH'], ['bmw m4', 'BMW'], ['bmw', 'BMW'],
+  ['mercedes', 'AMG'], ['ferrari 296', '296GT3'], ['ferrari 499', '499P'], ['ferrari 488', '488GTE'],
+  ['porsche 963', '963'], ['porsche 911 gt3', '911GT3R'], ['porsche 911', '911GTE'], ['porsche', '911GT3R'],
+  ['chevrolet corvette z06', 'Z06GT3R'], ['corvette z06', 'Z06GT3R'], ['corvette', 'C8RGTE'],
+  ['aston martin valkyrie', 'AMVALK'], ['aston martin', 'AMV'],
+  ['mclaren', 'MCLAREN'], ['ford mustang', 'MUSTANG'], ['ford', 'MUSTANG'],
+  ['lexus', 'LEXUS'], ['lamborghini', 'HURACAN'], ['toyota', 'GR010'], ['peugeot', '9X8W'],
+  ['alpine', 'ALPINE'], ['cadillac', 'VLMDH'], ['genesis', 'GMR001'], ['isotta', 'ISOTTA'],
+  ['glickenhaus', 'GLICK'], ['vanwall', 'VANWALL'], ['oreca', 'ORECA07'], ['ligier', 'JSP325'],
+  ['duqueine', 'D09P3'], ['ginetta', 'G61LTP3EVO'], ['adess', 'AD25']
+];
+
 /* Okrążenie wolniejsze niż 107% najlepszego nie liczy się do równości
    tempa (wyjazd z pitu, obrót, żółta flaga). */
 var PROG_TEMPA = 1.07;
@@ -472,8 +488,45 @@ function dataKropki (d) {
   return d ? dwa(d.getDate()) + '.' + dwa(d.getMonth() + 1) + '.' + d.getFullYear() : '';
 }
 
+/* Spis plików po małych literach — gra bywa niekonsekwentna w wielkości. */
+var AUTA = {};
+ZAS.auta.forEach(function (a) { AUTA[String(a).toLowerCase()] = a; });
+
 function obrazAuta (veh) {
-  return ZAS.auta.indexOf(veh) > -1 ? 'assets/img/lmu/auta/' + veh + '.webp' : '';
+  var a = AUTA[String(veh || '').toLowerCase()];
+  return a ? 'assets/img/lmu/auta/' + a + '.webp' : '';
+}
+
+/* Ogólny render modelu — zapas, gdy nie mamy tego malowania. */
+var zapasy = {};
+function obrazModelu (carType) {
+  var t = String(carType || '').toLowerCase();
+  if (zapasy[t] !== undefined) return zapasy[t];
+  var token = '';
+  for (var i = 0; i < MODELE.length && !token; i++) if (t.indexOf(MODELE[i][0]) > -1) token = MODELE[i][1];
+  var wynik = '';
+  if (token) {
+    var re = new RegExp('^397_[0-9a-z]*_' + token.toLowerCase() + '$');
+    var pasuje = Object.keys(AUTA).filter(function (a) { return re.test(a); }).sort();
+    if (pasuje.length) wynik = 'assets/img/lmu/auta/' + AUTA[pasuje[pasuje.length - 1]] + '.webp';
+  }
+  return (zapasy[t] = wynik);
+}
+
+/* Obraz auta kierowcy: malowanie z wyścigu, a jak go nie ma — model. */
+function obrazAutaK (k) {
+  return obrazAuta(k.veh) || obrazModelu(k.autoPelne || k.auto);
+}
+
+/* Malowania, których nie mamy w folderze — do podpowiedzi pod tabelą. */
+function brakujace (lista) {
+  var out = [], jest = {};
+  lista.forEach(function (k) {
+    if (!k.veh || obrazAuta(k.veh) || jest[k.veh]) return;
+    jest[k.veh] = 1;
+    out.push({ veh: k.veh, auto: k.auto, zapas: !!obrazModelu(k.autoPelne || k.auto) });
+  });
+  return out;
 }
 function obrazMarki (m) {
   return m && ZAS.marki[m] ? 'assets/img/lmu/marki/' + ZAS.marki[m] : '';
@@ -553,7 +606,7 @@ function sezon () {
       kl.kierowcy.forEach(function (k) {
         var klucz = nazwa(k.nazwa).toLowerCase();
         var o = K.kto[klucz] = K.kto[klucz] || { nazwa: nazwa(k.nazwa), punkty: [], suma: 0, wygrane: 0, podia: 0, najlepsze: 999 };
-        o.zespol = nazwa(k.zespol); o.nr = k.nr; o.veh = k.veh; o.marka = k.marka; o.auto = k.auto;
+        o.zespol = nazwa(k.zespol); o.nr = k.nr; o.veh = k.veh; o.marka = k.marka; o.auto = k.auto; o.autoPelne = k.autoPelne;
         o.punkty[ri] = k.ukonczyl ? k.punkty : null;
         o.dnf = o.dnf || [];
         o.dnf[ri] = !k.ukonczyl;
@@ -644,7 +697,7 @@ function htmlWyniki (d) {
         (punkty ? '<th class="th-pts">Pkt</th>' : '') +
       '</tr></thead><tbody>' +
       kl.kierowcy.map(function (k, i) {
-        var auto = obrazAuta(k.veh);
+        var auto = obrazAutaK(k);
         var mk = obrazMarki(k.marka);
         var wynik = k.status
           ? '<span class="lmu-status">' + k.status + '</span>'
@@ -658,7 +711,8 @@ function htmlWyniki (d) {
           '<td class="drv"><span class="lmu-kto">' + esc(nazwa(k.nazwa)) + kara + '</span>' +
             '<span class="lmu-zespol">' + esc(nazwa(k.zespol)) + '</span></td>' +
           '<td class="lmu-auto mach">' +
-            (auto ? '<img src="' + auto + '" alt="" loading="lazy">' : '') +
+            /* gdy pliku nie ma na serwerze, chowamy obrazek zamiast krzyżyka */
+            (auto ? '<img src="' + auto + '" alt="" loading="lazy" onerror="this.hidden=true">' : '') +
             (mk ? '<img class="lmu-marka" src="' + mk + '" alt="">' : '') +
             '<span class="lmu-model">' + esc(k.auto) + '</span></td>' +
           '<td class="num" data-label="Okr.">' + k.okr + '</td>' +
@@ -670,7 +724,25 @@ function htmlWyniki (d) {
       }).join('') +
       '</tbody></table></div>', kl.kierowcy.length + ' aut');
   });
-  return html;
+  return html + htmlBrakujace(d.kierowcy);
+}
+
+/* Podpowiedź pod tabelą: których malowań nie mamy i co z tym zrobić. */
+function htmlBrakujace (lista) {
+  var bb = brakujace(lista);
+  if (!bb.length) return '';
+  var pliki = stan.pliki.map(function (p) { return p.nazwa; }).join(' ');
+  var widoczne = bb.slice(0, 6);
+  return '<p class="notice lmu-braki">Nie mam obrazów ' + bb.length +
+    (bb.length === 1 ? ' malowania: ' : ' malowań: ') +
+    widoczne.map(function (b) {
+      return '<b>' + esc(b.auto) + '</b> <code>' + esc(b.veh) + '.VEH</code>' + (b.zapas ? '' : ' <i>(bez zapasowego renderu)</i>');
+    }).join(', ') + (bb.length > widoczne.length ? ' i ' + (bb.length - widoczne.length) + ' innych' : '') +
+    '. Pokazuję zamiast nich ogólny render modelu albo logo marki. ' +
+    'Prawdziwe malowania skopiujesz na komputerze z grą: <code>python3 narzedzia/lmu-zasoby.py ' + esc(pliki) + '</code>, ' +
+    'a potem wgrywasz nowe pliki z <code>assets/img/lmu/auta/</code> i <code>assets/js/lmu-zasoby.js</code>. ' +
+    'Malowanie z pracowni, którego nie ma w plikach gry, wstawisz ręcznie jako ' +
+    '<code>assets/img/lmu/auta/' + esc(bb[0].veh) + '.webp</code> (obraz 380×152) i uruchamiasz skrypt jeszcze raz, żeby odświeżył spis.</p>';
 }
 
 /* ------------------------------------------------------------------
@@ -1117,7 +1189,7 @@ function rysujGrafike () {
   d.klasy.forEach(function (kl) { H += PAS_KL + NAG_TAB + kl.kierowcy.length * WIERSZ + ODST; });
 
   var adresy = [obrazTla(d), obrazToru(d), 'assets/img/brand/logo.png'];
-  d.kierowcy.forEach(function (k) { adresy.push(obrazAuta(k.veh), obrazMarki(k.marka)); });
+  d.kierowcy.forEach(function (k) { adresy.push(obrazAutaK(k), obrazMarki(k.marka)); });
 
   return obrazy(adresy).then(function (img) {
     var c = document.createElement('canvas');
@@ -1197,7 +1269,7 @@ function rysujGrafike () {
         ctx.font = '400 17px "Barlow", sans-serif';
         tekstMax(ctx, nazwa(k.zespol), K.kto, yy + 54, K.auto - K.kto - 30);
 
-        var a = img[obrazAuta(k.veh)];
+        var a = img[obrazAutaK(k)];
         var m = img[obrazMarki(k.marka)];
         if (a) ctx.drawImage(a, K.auto - 12, yy - 6, 190, 76);
         else if (m) {                       /* brak renderu: duże, przygaszone logo marki */
@@ -1257,7 +1329,7 @@ function rysujSezon () {
   S.klasy.forEach(function (kl) { H += PAS_KL + NAG_TAB + kl.kierowcy.length * WIERSZ + ODST; });
 
   var adresy = [obrazTla(ost.dane), obrazToru(ost.dane), 'assets/img/brand/logo.png'];
-  S.klasy.forEach(function (kl) { kl.kierowcy.forEach(function (o) { adresy.push(obrazAuta(o.veh), obrazMarki(o.marka)); }); });
+  S.klasy.forEach(function (kl) { kl.kierowcy.forEach(function (o) { adresy.push(obrazAutaK(o), obrazMarki(o.marka)); }); });
 
   return obrazy(adresy).then(function (img) {
     var c = document.createElement('canvas');
@@ -1324,7 +1396,7 @@ function rysujSezon () {
         ctx.font = '400 16px "Barlow", sans-serif';
         tekstMax(ctx, o.zespol, K.kto, yy + 50, K.auto - K.kto - 30);
 
-        var a = img[obrazAuta(o.veh)], m = img[obrazMarki(o.marka)];
+        var a = img[obrazAutaK(o)], m = img[obrazMarki(o.marka)];
         if (a) ctx.drawImage(a, K.auto - 12, yy - 6, 170, 68);
         if (m) ctx.drawImage(m, K.auto + 166, yy + 16, 26, 26);
         ctx.fillStyle = KOL.dim;
