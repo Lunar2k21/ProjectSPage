@@ -153,17 +153,53 @@ function model (carType) {
     .trim() || carType;
 }
 
-/* Klucz toru z ścieżki w pliku: …\Locations\PortimaoWEC_2023\… -> portimaowec */
-function kluczToru (trackData, venue) {
-  var m = /Locations[\\\/]+([A-Za-z]+?)(?:_\d{4})?[\\\/]/.exec(trackData || '');
-  var k = m ? m[1].toLowerCase() : '';
-  if (k && ZAS.tory.indexOf(k) > -1) return k;
+/* Tor -> klucz obrazów (logo i panorama z folderu gry, np. „spawec").
+   Gra zmienia nazwy folderów między wersjami (SpaWEC_2023, Spa_2026…),
+   więc szukamy po kilku tropach naraz: ścieżka toru, nazwa obiektu,
+   nazwa wydarzenia. Klucz z pliku gry bez dopisku wec/elms to „rdzeń"
+   toru; dodatkowe nazwy pod rdzeniem łapią tory, których nazwa w pliku
+   wyników nie zawiera rdzenia (COTA = „Circuit of the Americas"). */
+var TORY_INACZEJ = {
+  cota: ['americas', 'cota'], paulricard: ['paulricard', 'castellet'], qatar: ['lusail', 'losail', 'qatar'],
+  interlagos: ['interlagos', 'josecarlospace', 'saopaulo'], bahrain: ['bahrain', 'sakhir'],
+  barcelona: ['barcelona', 'catalunya'], imola: ['imola', 'enzoedino'], lemans: ['lemans', 'sarthe'],
+  lagunaseca: ['lagunaseca', 'weathertech'], longbeach: ['longbeach'], roadatlanta: ['roadatlanta'],
+  spa: ['spa', 'francorchamps'], portimao: ['portimao', 'algarve'], silverstone: ['silverstone'],
+  monza: ['monza'], fuji: ['fuji'], sebring: ['sebring'], daytona: ['daytona']
+};
 
-  var slowo = String(venue || '').toLowerCase().split(/[^a-z]+/).filter(Boolean)[0] || '';
-  for (var i = 0; i < ZAS.tory.length; i++) {
-    if (slowo && ZAS.tory[i].indexOf(slowo) === 0) return ZAS.tory[i];
-  }
-  return k;
+function litery (t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[^a-z]/g, ''); }
+
+function kluczToru (trackData, venue, event, course) {
+  var sciezka = String(trackData || '');
+  /* 1. folder toru wprost: …\Locations\SpaWEC_2023\… -> spawec */
+  var m = /Locations[\\\/]+([^\\\/]+)/i.exec(sciezka);
+  var folder = m ? litery(m[1].replace(/[_\s-]*\d+$/, '')) : '';
+  var elms = /elms/i.test(sciezka + ' ' + event);
+  if (folder && elms && ZAS.tory.indexOf(folder + 'elms') > -1) return folder + 'elms';
+  if (folder && ZAS.tory.indexOf(folder) > -1) return folder;
+
+  /* 2. dopasowanie po rdzeniu nazwy we wszystkich tekstach naraz.
+     Ze ścieżki bierzemy tylko część za „Locations" — wcześniej stoi
+     folder gry „Le Mans Ultimate", który pasowałby do każdego toru. */
+  var poLocations = sciezka.replace(/^[\s\S]*?Locations[\\\/]+/i, '');
+  if (poLocations === sciezka) poLocations = '';
+  var tekst = litery([poLocations, venue, event, course].join(' '));
+  var kandydaci = ZAS.tory.filter(function (k) {
+    var rdzen = k.replace(/(wec|elms)$/, '');
+    var slowa = TORY_INACZEJ[rdzen] || [rdzen];
+    return slowa.some(function (s) { return s.length > 2 && tekst.indexOf(s) > -1; });
+  });
+  if (!kandydaci.length) return folder;
+  /* kilka wariantów (silverstone / silverstoneelms): najpierw zgodny
+     z serią, potem ten z panoramą */
+  kandydaci.sort(function (a, b) {
+    function ocena (k) {
+      return (/elms$/.test(k) === elms ? 2 : 0) + (ZAS.tla.indexOf(k) > -1 ? 1 : 0);
+    }
+    return ocena(b) - ocena(a);
+  });
+  return kandydaci[0];
 }
 
 /* Okrążenia kierowcy: pozycja, sektory, prędkość, opony, pit. */
@@ -407,7 +443,8 @@ function parsuj (tekst) {
     tor: {
       nazwa: venue,
       wydarzenie: tekstZ(rr, 'TrackEvent'),
-      klucz: kluczToru(trackData, venue),
+      klucz: kluczToru(trackData, venue, tekstZ(rr, 'TrackEvent'), tekstZ(rr, 'TrackCourse')),
+      sciezka: trackData,
       dlugosc: liczba(tekstZ(rr, 'TrackLength'))
     },
     data: ts ? new Date(ts * 1000) : null,
@@ -531,8 +568,16 @@ function brakujace (lista) {
 function obrazMarki (m) {
   return m && ZAS.marki[m] ? 'assets/img/lmu/marki/' + ZAS.marki[m] : '';
 }
+/* Panorama: gdy dany wariant toru jej nie ma (np. „silverstone"), bierzemy
+   panoramę innego wariantu tego samego toru („silverstoneelms"). */
 function obrazTla (d) {
-  return d.tor.klucz && ZAS.tla.indexOf(d.tor.klucz) > -1 ? 'assets/img/lmu/tory/' + d.tor.klucz + '-tlo.webp' : '';
+  var k = d.tor.klucz;
+  if (!k) return '';
+  if (ZAS.tla.indexOf(k) < 0) {
+    var rdzen = k.replace(/(wec|elms)$/, '');
+    k = ZAS.tla.filter(function (t) { return t.replace(/(wec|elms)$/, '') === rdzen; })[0] || '';
+  }
+  return k ? 'assets/img/lmu/tory/' + k + '-tlo.webp' : '';
 }
 function obrazToru (d) {
   return d.tor.klucz && ZAS.tory.indexOf(d.tor.klucz) > -1 ? 'assets/img/lmu/tory/' + d.tor.klucz + '.svg' : '';
@@ -724,7 +769,18 @@ function htmlWyniki (d) {
       }).join('') +
       '</tbody></table></div>', kl.kierowcy.length + ' aut');
   });
-  return html + htmlBrakujace(d.kierowcy);
+  return html + htmlBrakujace(d.kierowcy) + htmlBrakToru(d);
+}
+
+/* Tor nierozpoznany — pokazujemy, co jest w pliku, żeby łatwo dopisać. */
+function htmlBrakToru (d) {
+  if (obrazToru(d)) return '';
+  var folder = (/Locations[\\\/]+([^\\\/]+)/i.exec(d.tor.sciezka || '') || [])[1] || '—';
+  return '<p class="notice lmu-braki">Nie rozpoznałem toru <b>' + esc(d.tor.nazwa || '?') + '</b> ' +
+    '(folder w grze: <code>' + esc(folder) + '</code>), więc baner i grafika są bez logo i zdjęcia toru. ' +
+    'Jeśli to nowy tor z aktualizacji gry, uruchom <code>python3 narzedzia/lmu-zasoby.py --wszystkie</code>; ' +
+    'jeśli tor już jest w folderze <code>assets/img/lmu/tory/</code>, a mimo to się nie łączy, ' +
+    'dopisz jego nazwę w <code>TORY_INACZEJ</code> w <code>assets/js/lmu.js</code>.</p>';
 }
 
 /* Podpowiedź pod tabelą: których malowań nie mamy i co z tym zrobić. */
@@ -1097,8 +1153,9 @@ function naglowekGrafiki (ctx, o, img) {
   /* tytuł i opis po lewej */
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = KOL.krem;
-  ctx.font = 'italic 800 92px "Saira Condensed", "Arial Narrow", sans-serif';
-  tekstMax(ctx, String(o.tytul || '').toUpperCase(), X - 4, 236, gB - X - 60);
+  /* długi tytuł („6 Hours of Spa-Francorchamps") zmniejszamy, zamiast ucinać */
+  tekstDopasuj(ctx, String(o.tytul || '').toUpperCase(), X - 4, 236, gB - X - 60,
+    'italic 800 #px "Saira Condensed", "Arial Narrow", sans-serif', 92, 54);
   ctx.fillStyle = 'rgba(239,232,218,.72)';
   odstep(ctx, 2);
   tekstDopasuj(ctx, String(o.meta || '').toUpperCase(), X, 290, gB - X - 70, '400 #px "IBM Plex Mono", monospace', 19, 14);
