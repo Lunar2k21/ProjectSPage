@@ -27,6 +27,24 @@ Jak używać
 Polecane: --wszystkie. Każde malowanie ma w grze osobny plik, więc
 wyniki z innego wyścigu prawie zawsze mają auta, których jeszcze nie ma.
 
+Paczka do wgrania
+-----------------
+Gdy pojawi się coś nowego (aktualizacja gry, nowy tor), skrypt odkłada
+same nowe pliki do osobnego folderu obok repozytorium:
+
+    ../do-wgrania-lmu-<data>/assets/img/lmu/...   tylko nowe obrazy
+    ../do-wgrania-lmu-<data>/assets/js/lmu-zasoby.js
+    ../do-wgrania-lmu-<data>/CO-WGRAC.txt
+
+Ścieżki są takie jak w repozytorium, więc zawartość tego folderu wrzucasz
+na GitHuba w całości i nie trzeba wysyłać od nowa setek starych obrazów.
+„Nowe" = nieobecne w poprzednim spisie lmu-zasoby.js. Jeśli poprzednia
+paczka nie trafiła na GitHuba, porównaj ze spisem ze strony:
+
+    python3 narzedzia/lmu-zasoby.py --wszystkie --porownaj stary-lmu-zasoby.js
+
+Inne opcje: --paczka /ścieżka (gdzie odłożyć), --bez-paczki.
+
 Folder gry domyślnie szukany jest w ../LMU/UI (obok repozytorium);
 inny podajesz przez --ui /ścieżka/do/UI.
 """
@@ -38,6 +56,7 @@ import re
 import shutil
 import sys
 import xml.etree.ElementTree as ET
+from datetime import date
 
 try:
     from PIL import Image
@@ -114,8 +133,53 @@ def z_plikow(pliki):
     return auta, marki
 
 
+def wczytaj_spis(sciezka):
+    """Spis z lmu-zasoby.js jako słownik; pusty, gdy pliku brak."""
+    try:
+        t = io.open(sciezka, encoding='utf-8').read()
+        return json.loads(t[t.index('{'):t.rindex('}') + 1])
+    except Exception:
+        return {'auta': [], 'marki': {}, 'tory': [], 'tla': []}
+
+
+def pliki_spisu(spis):
+    """Ścieżki plików (względem assets/img/lmu) opisanych w spisie."""
+    out = set('auta/%s.webp' % n for n in spis.get('auta', []))
+    out |= set('marki/%s' % f for f in spis.get('marki', {}).values())
+    out |= set('tory/%s.svg' % n for n in spis.get('tory', []))
+    out |= set('tory/%s-tlo.webp' % n for n in spis.get('tla', []))
+    return out
+
+
+def paczka(nowe, folder):
+    """Kopiuje nowe pliki i spis do folderu, w tych samych ścieżkach co w repozytorium."""
+    lista = []
+    for rel in sorted(nowe):
+        zr = os.path.join(CEL, rel)
+        if not os.path.exists(zr):
+            continue
+        cel = os.path.join(folder, 'assets', 'img', 'lmu', rel)
+        os.makedirs(os.path.dirname(cel), exist_ok=True)
+        shutil.copy2(zr, cel)
+        lista.append('assets/img/lmu/' + rel)
+    os.makedirs(os.path.join(folder, 'assets', 'js'), exist_ok=True)
+    shutil.copy2(SPIS, os.path.join(folder, 'assets', 'js', 'lmu-zasoby.js'))
+    lista.append('assets/js/lmu-zasoby.js')
+    io.open(os.path.join(folder, 'CO-WGRAC.txt'), 'w', encoding='utf-8').write(
+        'Nowe pliki do wyników LMU — %s\n'
+        'Wrzuć na GitHuba zawartość tego folderu (folder assets/ do głównego katalogu\n'
+        'repozytorium). Ścieżki są takie same jak w repozytorium, stare pliki zostają.\n\n'
+        '%s\n' % (date.today().isoformat(), '\n'.join(lista)))
+    return lista
+
+
 def main():
     argumenty = sys.argv[1:]
+
+    # co było w spisie przed uruchomieniem (albo w spisie podanym do porównania)
+    stary = wczytaj_spis(SPIS)
+    if '--porownaj' in argumenty:
+        stary = wczytaj_spis(os.path.expanduser(argumenty[argumenty.index('--porownaj') + 1]))
     ui = os.path.join(os.path.dirname(KORZEN), 'LMU', 'UI')
     if '--ui' in argumenty:
         ui = os.path.expanduser(argumenty[argumenty.index('--ui') + 1])
@@ -210,6 +274,23 @@ def main():
     rozmiar = sum(os.path.getsize(os.path.join(d, f)) for d, _, fs in os.walk(CEL) for f in fs)
     print('Marki: %d · tory: %d (panoramy: %d) · razem %.1f MB'
           % (len(spis['marki']), len(spis['tory']), len(spis['tla']), rozmiar / 1048576.0))
+
+    # --- paczka z samymi nowościami -----------------------------------
+    nowe = pliki_spisu(spis) - pliki_spisu(stary)
+    if not nowe:
+        print('Nic nowego względem poprzedniego spisu — nie ma czego wgrywać.')
+        return
+    nowe_tory = sorted(set(spis['tory']) - set(stary.get('tory', [])))
+    print('Nowe: aut %d, marek %d, torów %d%s'
+          % (sum(1 for r in nowe if r.startswith('auta/')), sum(1 for r in nowe if r.startswith('marki/')),
+             len(nowe_tory), (' (' + ', '.join(nowe_tory) + ')') if nowe_tory else ''))
+    if '--bez-paczki' in argumenty:
+        return
+    folder = os.path.join(os.path.dirname(KORZEN), 'do-wgrania-lmu-' + date.today().isoformat())
+    if '--paczka' in argumenty:
+        folder = os.path.expanduser(argumenty[argumenty.index('--paczka') + 1])
+    lista = paczka(nowe, folder)
+    print('Paczka do wgrania: %s (%d plików) — szczegóły w CO-WGRAC.txt' % (folder, len(lista)))
 
 
 if __name__ == '__main__':
