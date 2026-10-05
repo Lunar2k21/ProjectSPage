@@ -56,13 +56,18 @@ var HTML = document.documentElement;
     if (zakladki[r.round]) r.resultsTab = zakladki[r.round];
   });
 
-  if (L.videos && L.videos.length) {
-    if (CFG.media) CFG.media.videos = L.videos;
+  /* Filmy: ręczna lista z zrodla.js ma pierwszeństwo; bez niej bierzemy
+     listę pobraną z kanału przy budowaniu strony (assets/js/filmy.js),
+     a dopiero na końcu tę wpisaną w config.js. */
+  var auto = (window.PS_FILMY || []).filter(function (v) { return v && v.id; });
+  var filmy = (L.videos && L.videos.length) ? L.videos : (auto.length ? auto : null);
+
+  if (filmy) {
+    if (CFG.media) CFG.media.videos = filmy;
 
     /* Slajd „Najnowszy film” bierze identyfikator i opis z pierwszej
-       pozycji listy — jedna zmiana w zrodla.js odświeża i slajd,
-       i sekcję materiałów. */
-    var nowy = L.videos[0] || {};
+       pozycji listy — odświeża się razem z sekcją materiałów. */
+    var nowy = filmy[0] || {};
     (CFG.slides || []).forEach(function (s2) {
       if (s2.type !== 'video' || !nowy.id) return;
       s2.video = nowy.id;
@@ -72,6 +77,12 @@ var HTML = document.documentElement;
       });
     });
   }
+
+  /* Adresy arkuszy do odnośnika „Otwórz arkusz" na podstronie wyników. */
+  var arkusze = L.sheets || {};
+  (CFG.championships || []).forEach(function (c) {
+    if (arkusze[c.id]) c.sheetUrl = arkusze[c.id];
+  });
 })();
 
 function $  (s, r) { return (r || document).querySelector(s); }

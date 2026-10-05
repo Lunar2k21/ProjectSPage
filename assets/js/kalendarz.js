@@ -87,7 +87,7 @@ window.PS_KALENDARZ = [
   },
   "date": "2026-10-02T19:00:00+02:00",
   "koniec": "",
-  "resultsTab": ""
+  "resultsTab": "R1 Belgia"
  },
  {
   "round": 2,
@@ -98,7 +98,7 @@ window.PS_KALENDARZ = [
   },
   "date": "2026-10-16T19:00:00+02:00",
   "koniec": "",
-  "resultsTab": ""
+  "resultsTab": "R2 Stany Zjednoczone"
  },
  {
   "round": 3,
@@ -109,7 +109,7 @@ window.PS_KALENDARZ = [
   },
   "date": "2026-10-30T19:00:00+01:00",
   "koniec": "",
-  "resultsTab": ""
+  "resultsTab": "R3 Japonia"
  },
  {
   "round": 4,
@@ -120,7 +120,7 @@ window.PS_KALENDARZ = [
   },
   "date": "2026-11-13T19:00:00+01:00",
   "koniec": "",
-  "resultsTab": ""
+  "resultsTab": "R4 Wielka Brytania"
  },
  {
   "round": 5,
@@ -131,7 +131,7 @@ window.PS_KALENDARZ = [
   },
   "date": "2026-11-27T19:00:00+01:00",
   "koniec": "",
-  "resultsTab": ""
+  "resultsTab": "R5 Hiszpania"
  },
  {
   "round": 6,
@@ -142,7 +142,7 @@ window.PS_KALENDARZ = [
   },
   "date": "2026-12-11T19:00:00+01:00",
   "koniec": "",
-  "resultsTab": ""
+  "resultsTab": "R6 Włochy"
  }
 ];
 window.PS_SERIE = {

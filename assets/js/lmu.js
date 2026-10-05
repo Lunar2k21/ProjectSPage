@@ -1524,17 +1524,22 @@ function wiersze () {
     return out;
   }
 
+  /* Wyścig: zwycięzca ma czas całkowity, reszta stratę („+13.561",
+     „+2 okr."), a kto nie ukończył — DNF/DSQ w tej samej kolumnie.
+     Kwalifikacje/trening: najlepsze okrążenie lidera i straty do niego. */
   var d = dane();
   var punkty = $('#lmuPunkty').checked && d.wyscig;
-  var naglowki = ['Poz', 'Kierowca', 'Zespół', 'Samochód', 'Klasa', 'Nr', 'Okrążenia', 'Czas',
-                  'Najlepsze okrążenie', 'Pit', 'Status'];
+  var naglowki = ['Poz', 'Kierowca', 'Zespół', 'Samochód', 'Klasa', 'Nr', 'Okrążenia',
+                  'Najlepsze okrążenie', 'Pit', 'Czas'];
   if (punkty) naglowki.push('Punkty');
   var wynik = [naglowki];
   d.klasy.forEach(function (kl) {
     kl.kierowcy.forEach(function (k, i) {
-      var w = [k.status ? '' : k.pozKlasa, nazwa(k.nazwa), nazwa(k.zespol), k.auto, kl.nazwa, k.nr, k.okr,
-               k.status ? '' : (i === 0 ? czas(k.czas) : k.strata),
-               czas(k.najlepsze), k.pit, k.status || 'Ukończył'];
+      var c = k.status ? k.status
+            : i === 0 ? (d.wyscig ? czas(k.czas) : czas(k.najlepsze))
+            : k.strata;
+      var w = [k.status ? '—' : k.pozKlasa, nazwa(k.nazwa), nazwa(k.zespol), k.auto, kl.nazwa, k.nr, k.okr,
+               czas(k.najlepsze), k.pit, c];
       if (punkty) w.push(k.punkty);
       wynik.push(w);
     });
@@ -1542,9 +1547,34 @@ function wiersze () {
   return wynik;
 }
 
+/* Arkusz Google zamienia wklejone „+13.561" na formułę (#ERROR!),
+   a „1:00:21.218" na liczbę. Dlatego do schowka idą dwie wersje:
+   tabela HTML w formacie samego Arkusza Google (każda komórka ma
+   zapisany typ — tekst zostaje tekstem) i zwykły tekst z apostrofem
+   przed wartościami, które arkusz wziąłby za formułę. */
+function liczbaArkusza (c) {
+  return typeof c === 'number' || /^(0|[1-9]\d{0,6})$/.test(String(c));
+}
+
+function htmlArkusza () {
+  function komorka (c) {
+    c = c == null ? '' : String(c);
+    if (c === '') return '<td></td>';
+    var wartosc = liczbaArkusza(c) ? { 1: 3, 3: Number(c) } : { 1: 2, 2: c };
+    return '<td data-sheets-value="' + esc(JSON.stringify(wartosc)) + '">' + esc(c) + '</td>';
+  }
+  return '<google-sheets-html-origin><table xmlns="http://www.w3.org/1999/xhtml" cellspacing="0" cellpadding="0" ' +
+    'dir="ltr" border="1" data-sheets-root="1"><tbody>' +
+    wiersze().map(function (w) { return '<tr>' + w.map(komorka).join('') + '</tr>'; }).join('') +
+    '</tbody></table></google-sheets-html-origin>';
+}
+
 function tsv () {
   return wiersze().map(function (w) {
-    return w.map(function (c) { return String(c).replace(/[\t\n]/g, ' '); }).join('\t');
+    return w.map(function (c) {
+      c = String(c).replace(/[\t\n]/g, ' ');
+      return /^[+=@-]/.test(c) && c !== '—' ? "'" + c : c;
+    }).join('\t');
   }).join('\n');
 }
 
@@ -1557,15 +1587,37 @@ function csv () {
   }).join('\n');
 }
 
-function kopiuj (tekst) {
-  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(tekst);
+function kopiuj (tekst, html) {
+  /* Nowe przeglądarki: schowek z dwiema wersjami naraz. */
+  if (html && navigator.clipboard && navigator.clipboard.write && window.ClipboardItem && window.isSecureContext) {
+    return navigator.clipboard.write([new ClipboardItem({
+      'text/html': new Blob([html], { type: 'text/html' }),
+      'text/plain': new Blob([tekst], { type: 'text/plain' })
+    })]).catch(function () { return kopiujStaro(tekst, html); });
+  }
+  return kopiujStaro(tekst, html);
+}
+
+/* Starsze przeglądarki i strona otwarta z pliku: zdarzenie „copy". */
+function kopiujStaro (tekst, html) {
   return new Promise(function (ok, zle) {
-    var ta = document.createElement('textarea');
-    ta.value = tekst; ta.style.position = 'fixed'; ta.style.opacity = '0';
-    document.body.appendChild(ta); ta.select();
+    function przy (e) {
+      e.clipboardData.setData('text/plain', tekst);
+      if (html) e.clipboardData.setData('text/html', html);
+      e.preventDefault();
+    }
+    document.addEventListener('copy', przy);
     try { document.execCommand('copy') ? ok() : zle(); } catch (e) { zle(e); }
-    ta.remove();
+    document.removeEventListener('copy', przy);
   });
+}
+
+/* Nazwa zakładki, pod którą kalendarz szuka wyników tej rundy. */
+function nazwaZakladki () {
+  if (stan.zakladka === 'sezon') return 'Klasyfikacja generalna';
+  var r = wybranaRunda();
+  if (!r) return '';
+  return r.resultsTab || ('R' + r.n + ' ' + String(r.name || '').split(/\s+[—–-]\s+/)[0]);
 }
 
 /* ------------------------------------------------------------------
@@ -1577,11 +1629,11 @@ function blad (tekst) {
   el.textContent = tekst || '';
 }
 
-function info (tekst) {
+function info (tekst, ms) {
   var el = $('#lmuInfo');
   el.textContent = tekst;
   clearTimeout(info.t);
-  info.t = setTimeout(render, 3500);
+  info.t = setTimeout(render, ms || 3500);
 }
 
 /* Ustawia pola (runda, tytuł) pod pokazywany plik. */
@@ -1768,8 +1820,9 @@ function start () {
   });
 
   $('#lmuArkusz').addEventListener('click', function () {
-    kopiuj(tsv()).then(function () {
-      info('Skopiowane — wklej w arkuszu w komórce A1 nowej zakładki.');
+    kopiuj(tsv(), htmlArkusza()).then(function () {
+      var z = nazwaZakladki();
+      info(z ? 'Skopiowane — wklej w komórce A1 zakładki „' + z + '".' : 'Skopiowane — wklej w arkuszu w komórce A1 nowej zakładki.', 9000);
     }).catch(function () { blad('Przeglądarka nie pozwoliła skopiować — użyj przycisku CSV.'); });
   });
   $('#lmuCsv').addEventListener('click', function () {

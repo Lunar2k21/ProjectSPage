@@ -64,8 +64,9 @@ window.PS_CONFIG = {
       ]
     },
     {
-      /* Slajd filmowy — tłem jest miniatura z YouTube, więc wystarczy
-         podmienić „video” na nowe ID i slajd sam się aktualizuje. */
+      /* Slajd filmowy — tłem jest miniatura z YouTube. Identyfikator
+         i opis podmieniają się same na najnowszy film z kanału
+         (assets/js/filmy.js, pobierany przy budowaniu strony). */
       id: 'video',
       type: 'video',
       video: 'udDeI9KIbv8',
@@ -170,8 +171,9 @@ window.PS_CONFIG = {
 
   /* ---------------------------------------------------------------
      5. MEDIA
-     Lista z kanału: youtube.com/feeds/videos.xml?channel_id=UCpjDcxwIfcoN5exRmAd6SYw
-     Miniatury lecą prosto z YouTube, więc wystarczy podmienić ID.
+     Najnowsze filmy pobierają się same przy budowaniu strony
+     (assets/js/filmy.js). Lista poniżej to tylko zapas na wypadek,
+     gdyby YouTube nie odpowiedział przy pierwszym budowaniu.
   --------------------------------------------------------------- */
   media: {
     channel:  'https://www.youtube.com/@ProjectSimracingpl',

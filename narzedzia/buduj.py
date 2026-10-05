@@ -28,6 +28,13 @@ Jak używać
     python3 narzedzia/buduj.py              # buduje do _site/
     python3 narzedzia/buduj.py --serwuj     # buduje i uruchamia podgląd
     python3 narzedzia/buduj.py --out kat    # inny folder wynikowy
+    python3 narzedzia/buduj.py --bez-filmow # bez pobierania listy z YouTube
+
+Przy każdym budowaniu skrypt pobiera też listę najnowszych filmów
+z kanału YouTube (assets/js/filmy.js) — strona główna pokazuje je sama,
+bez ręcznego wpisywania identyfikatorów. Automat na GitHubie buduje
+stronę co kilka godzin, więc nowy film pojawia się bez żadnej zmiany
+w plikach.
 
 Nagłówek pliku .md (wszystko opcjonalne):
 
@@ -53,7 +60,10 @@ import os
 import re
 import shutil
 import sys
+import time
 import unicodedata
+import urllib.request
+import xml.etree.ElementTree as ET
 from datetime import datetime
 
 try:
@@ -792,6 +802,60 @@ def kalendarz(out):
 # ----------------------------------------------------------------------
 # kopiowanie reszty strony
 # ----------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# filmy — najnowsze z kanału YouTube  ->  assets/js/filmy.js
+# ---------------------------------------------------------------------------
+
+KANAL_YT = 'UCpjDcxwIfcoN5exRmAd6SYw'
+ILE_FILMOW = 6
+NS_YT = {'a': 'http://www.w3.org/2005/Atom', 'yt': 'http://www.youtube.com/xml/schemas/2015'}
+
+
+def lista_filmow(xml):
+    """Z kanału RSS YouTube: [{id, title, date}], najnowsze pierwsze, bez Shortsów."""
+    korzen = ET.fromstring(xml)
+    lista = []
+    for e in korzen.findall('a:entry', NS_YT):
+        vid = (e.findtext('yt:videoId', '', NS_YT) or '').strip()
+        link = e.find('a:link', NS_YT)
+        href = link.get('href', '') if link is not None else ''
+        if not vid or '/shorts/' in href:
+            continue
+        lista.append({'id': vid,
+                      'title': (e.findtext('a:title', '', NS_YT) or '').strip(),
+                      'date': (e.findtext('a:published', '', NS_YT) or '')[:10]})
+    lista.sort(key=lambda f: f['date'], reverse=True)
+    return lista[:ILE_FILMOW]
+
+
+def filmy(out):
+    """Pobiera listę filmów i zapisuje assets/js/filmy.js. Gdy YouTube nie
+    odpowie, zostaje poprzedni plik — strona nigdy nie zostaje bez filmów."""
+    if '--bez-filmow' in sys.argv:
+        return
+    adres = 'https://www.youtube.com/feeds/videos.xml?channel_id=' + KANAL_YT
+    blad = None
+    for proba in range(3):
+        try:
+            zapytanie = urllib.request.Request(adres, headers={'User-Agent': 'Mozilla/5.0 (projectsimracing.pl)'})
+            lista = lista_filmow(urllib.request.urlopen(zapytanie, timeout=20).read())
+            break
+        except Exception as e:
+            blad, lista = e, None
+            time.sleep(3)
+    if not lista:
+        print('  filmy: nie udało się pobrać listy z YouTube (%s) — zostaje poprzednia' % (blad or 'pusta lista'))
+        return
+    cel = os.path.join(out, 'assets', 'js', 'filmy.js')
+    os.makedirs(os.path.dirname(cel), exist_ok=True)
+    io.open(cel, 'w', encoding='utf-8').write(
+        '/* Najnowsze filmy z kanału YouTube — powstaje przy budowaniu strony\n'
+        '   (narzedzia/buduj.py). Nie edytuj ręcznie: ręczną listę wpisuje się\n'
+        '   w zrodla.js (videos), a ona ma pierwszeństwo przed tą. */\n'
+        'window.PS_FILMY = %s;\n' % json.dumps(lista, ensure_ascii=False, indent=1))
+    print('  filmy: %d z kanału, najnowszy: %s (%s)' % (len(lista), lista[0]['title'], lista[0]['date']))
+
+
 def skopiuj_strone(out):
     for nazwa in sorted(os.listdir(KORZEN)):
         if nazwa in POMIJANE or nazwa.startswith('.'):
@@ -873,6 +937,7 @@ def main():
         skopiuj_strone(out)
 
     kalendarz(out)
+    filmy(out)
 
     sz = szablon()
     wszystkie = []

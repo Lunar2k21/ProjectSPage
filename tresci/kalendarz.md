@@ -30,9 +30,9 @@ tytul: Kalendarz sezonu
 
 | # | Runda | Start | Koniec | Wyniki |
 |---|---|---|---|---|
-| 1 | Belgia — Spa-Francorchamps | 2026-10-02 19:00 | | |
-| 2 | Stany Zjednoczone | 2026-10-16 19:00 | | |
-| 3 | Japonia | 2026-10-30 19:00 | | |
-| 4 | Wielka Brytania | 2026-11-13 19:00 | | |
-| 5 | Hiszpania | 2026-11-27 19:00 | | |
-| 6 | Włochy | 2026-12-11 19:00 | | |
+| 1 | Belgia — Spa-Francorchamps | 2026-10-02 19:00 | | R1 Belgia |
+| 2 | Stany Zjednoczone | 2026-10-16 19:00 | | R2 Stany Zjednoczone |
+| 3 | Japonia | 2026-10-30 19:00 | | R3 Japonia |
+| 4 | Wielka Brytania | 2026-11-13 19:00 | | R4 Wielka Brytania |
+| 5 | Hiszpania | 2026-11-27 19:00 | | R5 Hiszpania |
+| 6 | Włochy | 2026-12-11 19:00 | | R6 Włochy |
