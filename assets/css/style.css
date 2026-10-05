@@ -658,6 +658,10 @@ body.is-theater-open { overflow: hidden; }
 .rhead__sub { color: var(--dim); margin-top: 8px; max-width: 72ch; }
 
 .champs { display: flex; gap: 8px; flex-wrap: wrap; margin-top: clamp(18px, 2.6vw, 26px); }
+.champs[hidden] { display: none; }
+/* przełącznik serii nad podium na stronie głównej */
+.podchamps { margin: 0 0 clamp(14px, 2vw, 20px); }
+.podchamps .champ { font-size: 14px; align-items: center; }
 /* Równoległobok — obie krawędzie pochylone tak samo, jak pomarańczowy
    blok „PROJECT" w logo. */
 .champ {

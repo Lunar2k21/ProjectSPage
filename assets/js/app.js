@@ -459,6 +459,15 @@ function renderPodium () {
   if (empty) rows = [{ pos: 1 }, { pos: 2 }, { pos: 3 }];
 
   if (runda) runda.textContent = podium.round || '';
+  renderPodChamps();
+
+  /* „Pełne wyniki →" prowadzi od razu do tej serii i tej rundy. */
+  var wiecej = $('#podMore');
+  if (wiecej) {
+    wiecej.href = 'wyniki.html' + (podium.champ
+      ? '?champ=' + encodeURIComponent(podium.champ) + (podium.round ? '&tab=' + encodeURIComponent(podium.round) : '')
+      : '');
+  }
 
   if (live) {
     var naZywo = podium.status === 'ok' && !podium.demo;
@@ -482,8 +491,8 @@ function renderPodium () {
     if (!r) return;
 
     var seed  = (r.driver || 'x') + '|' + (podium.round || '') + '|' + r.pos;
-    var media = PS.photoImg(PS.photoFile(seed));
-    var time  = r.time || (CFG.results || {}).emptyTime || '--:--.---';
+    var media = PS.photoImg(PS.photoFile(seed, podium.champ));
+    var time  = PS.czasLadny(r.time) || (CFG.results || {}).emptyTime || '--:--.---';
     var carLbl = [r.car, r.team].filter(Boolean).map(esc).join(' · ');
 
     html += '<article class="pod pod--' + r.pos + (r.driver ? '' : ' pod--empty') + '">' +
@@ -508,16 +517,64 @@ function renderPodium () {
    i pokazujemy z niej trzy pierwsze miejsca. Ten sam kod czyta arkusz
    co podstrona wyników, więc obie strony nie mogą się rozjechać.
 ------------------------------------------------------------------ */
-var podium = { rows: [], round: '', demo: false, status: 'idle' };
+var podium = { rows: [], round: '', demo: false, status: 'idle', champ: '' };
+var KLUCZ_PODIUM = 'ps-podium';
+var podiumDane = {};        // pobrane już arkusze — przełączanie nie pyta drugi raz
+var podiumZapytanie = 0;
 
-function wczytajPodium () {
+/* Mistrzostwa, które mają skąd wziąć wyniki (arkusz albo dane przykładowe). */
+function mistrzostwaZWynikami () {
+  return (CFG.championships || []).filter(function (c) {
+    return (c.source && c.source.url) || (c.demo && (CFG.demoSheets || {})[c.id]);
+  });
+}
+
+/* Od której serii zacząć: ostatnio wybrana przez czytelnika, potem ta,
+   której runda skończyła się najpóźniej, na końcu ta z config.js. */
+function startowaSeria () {
+  var ids = mistrzostwaZWynikami().map(function (c) { return c.id; });
+  var zapis = '';
+  try { zapis = localStorage.getItem(KLUCZ_PODIUM) || ''; } catch (e) {}
+  if (zapis && ids.indexOf(zapis) > -1) return zapis;
+  var ost = PS.ostatniaSeria(ids);
+  if (ost) return ost;
+  var dom = (CFG.results || {}).champ || 'wrc';
+  return ids.indexOf(dom) > -1 ? dom : (ids[0] || dom);
+}
+
+function renderPodChamps () {
+  var box = $('#podChamps');
+  if (!box) return;
+  var lista = mistrzostwaZWynikami();
+  box.hidden = lista.length < 2;
+  if (box.hidden) return;
+  box.innerHTML = lista.map(function (c) {
+    var on = c.id === podium.champ;
+    return '<button type="button" class="champ' + (on ? ' is-on' : '') + '" role="tab"' +
+           ' aria-selected="' + on + '" data-pod="' + esc(c.id) + '" style="--kolor:' + PS.kolorSerii(c.id) + '">' +
+           '<i class="champ__kropka" aria-hidden="true"></i>' + esc(c.label) + '</button>';
+  }).join('');
+}
+
+function wczytajPodium (id) {
   var D = PS.dane;
   if (!D) return;
 
-  var ch = D.champ((CFG.results || {}).champ || 'wrc');
+  podium.champ = id || podium.champ || startowaSeria();
+  var ch = D.champ(podium.champ);
   if (!ch) { podium.status = 'nosource'; renderPodium(); return; }
 
-  D.pobierz(ch).then(function (data) {
+  var nr = ++podiumZapytanie;
+  var gotowe = podiumDane[podium.champ];
+  if (!gotowe) {
+    /* nowa seria: puste kafelki, zanim przyjdą dane */
+    podium.rows = []; podium.round = ''; podium.status = 'loading';
+    renderPodium();
+  }
+
+  (gotowe ? Promise.resolve(gotowe) : D.pobierz(ch)).then(function (data) {
+    if (nr !== podiumZapytanie) return;          // czytelnik zdążył przełączyć serię
+    podiumDane[podium.champ] = data;
     var t2 = D.ostatniaRunda(data);
     podium.demo = !!data.demo;
 
@@ -537,13 +594,23 @@ function wczytajPodium () {
     podium.round  = t2.name;
     podium.status = 'ok';
     renderPodium();
-  renderOstatni();
+    renderOstatni();
   }).catch(function (err) {
+    if (nr !== podiumZapytanie) return;
     podium.status = (err && err.kod === 'nosource') ? 'nosource' : 'error';
     if (window.console && podium.status === 'error') console.warn('[podium]', err);
     renderPodium();
   });
 }
+
+document.addEventListener('click', function (e) {
+  var b = e.target.closest && e.target.closest('[data-pod]');
+  if (!b) return;
+  var id = b.getAttribute('data-pod');
+  if (id === podium.champ) return;
+  try { localStorage.setItem(KLUCZ_PODIUM, id); } catch (err) {}
+  wczytajPodium(id);
+});
 
 /* ------------------------------------------------------------------
    NAJNOWSZY ARTYKUŁ

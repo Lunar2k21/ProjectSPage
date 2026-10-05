@@ -297,7 +297,7 @@ function renderPodium (t2, rows) {
     var pos  = idx + 1;
     var car  = m.car  !== -1 ? r[m.car]  : '';
     var team = m.team !== -1 ? r[m.team] : '';
-    var time = m.time !== -1 ? r[m.time] : (m.points !== -1 ? r[m.points] + ' pkt' : '');
+    var time = m.time !== -1 ? PS.czasLadny(r[m.time]) : (m.points !== -1 ? r[m.points] + ' pkt' : '');
     var div  = (m.div !== -1 && jestDywizja(r[m.div])) ? r[m.div] : '';
 
     /* W arkuszu zespołów pierwszy plan należy do zespołu, a skład
@@ -310,7 +310,7 @@ function renderPodium (t2, rows) {
     var seed = (tytul || 'x') + '|' + t2.name + '|' + pos;
 
     html += '<article class="pod pod--' + pos + (m.isTeam ? ' pod--team' : '') + '">' +
-              PS.photoImg(PS.photoFile(seed)) +
+              PS.photoImg(PS.photoFile(seed, (currentChamp() || {}).id)) +
               '<span class="pod__rank" aria-hidden="true">' + pos + '</span>' +
               '<div class="pod__body">' +
                 (div ? '<span class="mono pod__div">' + esc(div) + '</span>' : '') +
@@ -379,7 +379,7 @@ function renderTable (t2, rows) {
       else if (c.key.charAt(0) === 'x') v = r[c.idx];
       else v = r[m[c.key]];
 
-      if (c.key === 'time' && !String(v).trim()) v = t('pod.notime');
+      if (c.key === 'time') v = String(v).trim() ? PS.czasLadny(v) : t('pod.notime');
       if (c.key === 'driver' && m.div !== -1 && jestDywizja(r[m.div])) {
         return '<td class="' + c.cls + '" data-label="' + esc(c.label) + '">' + esc(v) +
                '<span class="pill pill--div">' + esc(r[m.div]) + '</span></td>';
@@ -508,9 +508,17 @@ var zadana = { champ: '', tab: '' };
     if (k === 'champ') zadana.champ = v;
     if (k === 'tab')   zadana.tab = v;
   });
-  if (zadana.champ) {
+  /* Bez wskazania w adresie zaczynamy od serii, której runda
+     skończyła się najpóźniej — po wyścigu LMU od razu widać LMU. */
+  var cel = zadana.champ;
+  if (!cel) {
+    cel = PS.ostatniaSeria((CFG.championships || []).filter(function (c) {
+      return c.source && c.source.url;
+    }).map(function (c) { return c.id; }));
+  }
+  if (cel) {
     (CFG.championships || []).forEach(function (c, i) {
-      if (c.id === zadana.champ) state.champ = i;
+      if (c.id === cel) state.champ = i;
     });
   }
 })();

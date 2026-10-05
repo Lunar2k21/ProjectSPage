@@ -264,10 +264,39 @@ function seedFrom (str) {
   return Math.abs(h);
 }
 
-function photoFile (seedKey) {
-  var pula = CFG.podiumPhotos || [];
+/* Zdjęcie do kafelka podium. Pula może być jedna dla wszystkich
+   (lista) albo osobna dla każdej serii ({ wrc: […], lmu: […] }) —
+   wtedy wyścig nie dostaje w tle samochodu rajdowego. */
+function photoFile (seedKey, seria) {
+  var p = CFG.podiumPhotos || [];
+  var pula = Array.isArray(p) ? p : (p[seria] || p.wrc || []);
   if (!pula.length) return null;
   return pula[seedFrom(seedKey) % pula.length];
+}
+
+/* Seria, której runda skończyła się najpóźniej (spośród podanych) —
+   od niej zaczyna podium na stronie głównej i podstrona wyników. */
+function ostatniaSeria (ids) {
+  var best = null;
+  rounds().forEach(function (r) {
+    if (!r.done || !r.end || ids.indexOf(r.series) < 0) return;
+    if (!best || r.end > best.end) best = r;
+  });
+  return best ? best.series : '';
+}
+
+/* Czas z arkusza bywa zapisany z siedmioma miejscami po przecinku
+   i zerową godziną („00:21:17.2770000"). Pokazujemy „21:17.277". */
+function czasLadny (v) {
+  var t = String(v == null ? '' : v).trim();
+  var m = /^(\d{1,2}):(\d{2}):(\d{2})[.,](\d+)$/.exec(t);
+  if (m) {
+    var ulamek = (m[4] + '000').slice(0, 3);
+    return (+m[1] ? +m[1] + ':' + m[2] : String(+m[2])) + ':' + m[3] + '.' + ulamek;
+  }
+  m = /^(\d{1,2}):(\d{2})[.,](\d{4,})$/.exec(t);
+  if (m) return +m[1] + ':' + m[2] + '.' + m[3].slice(0, 3);
+  return t;
 }
 
 function photoImg (file, sizes) {
@@ -527,7 +556,7 @@ window.PS = {
   $: $, $$: $$, esc: esc, txt: txt, t: t,
   addStrings: addStrings, onLang: onLang, applyLang: applyLang, applyTheme: applyTheme,
   normalize: normalize, seedFrom: seedFrom,
-  photoFile: photoFile, photoImg: photoImg,
+  photoFile: photoFile, photoImg: photoImg, ostatniaSeria: ostatniaSeria, czasLadny: czasLadny,
   rounds: rounds, nextRound: nextRound, nastepnaPo: nastepnaPo,
   stanSerii: stanSerii, kolorSerii: kolorSerii, odliczanie: odliczanie,
   icsUrl: icsUrl, dateText: dateText, dateRange: dateRange,

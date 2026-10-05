@@ -301,39 +301,58 @@ window.PS_CONFIG = {
 
   /* ---------------------------------------------------------------
      9. ZDJĘCIA NA KAFELKACH PODIUM
-     Wspólna pula zdjęć — bez wiązania z modelem auta, bo kierowcy
-     jeżdżą czym chcą. Każdemu z TOP 3 przydzielane jest zdjęcie
+     Osobna pula zdjęć dla każdej serii — bez wiązania z modelem auta,
+     bo kierowcy jeżdżą czym chcą. Każdemu z TOP 3 przydzielane jest zdjęcie
      losowo, ale STALE: ten sam kierowca w tej samej rundzie dostaje
      zawsze to samo, więc nic nie przeskakuje przy odświeżeniu.
 
      Pliki leżą w assets/img/podium/ w dwóch szerokościach:
      <nazwa>-800.webp i <nazwa>-1400.webp. Żeby dorzucić nowe zdjęcie,
-     wrzuć oba rozmiary i dopisz nazwę (bez -800/-1400) do listy.
+     wrzuć oba rozmiary i dopisz nazwę (bez -800/-1400) do listy
+     właściwej serii. Seria bez własnej listy bierze zdjęcia WRC.
   --------------------------------------------------------------- */
-  podiumPhotos: [
-    'citroen-c3-1',
-    'citroen-c3-2',
-    'citroen-c3-3',
-    'ford-fiesta-1',
-    'ford-fiesta-2',
-    'hyundai-i20-1',
-    'hyundai-i20-2',
-    'hyundai-i20-3',
-    'hyundai-i20-4',
-    'hyundai-i20-5',
-    'hyundai-i20-6',
-    'skoda-fabia-1',
-    'skoda-fabia-2',
-    'skoda-fabia-3',
-    'skoda-fabia-4',
-    'skoda-fabia-5',
-    'skoda-fabia-6',
-    'skoda-fabia-7',
-    'skoda-fabia-rs-1',
-    'skoda-fabia-rs-2',
-    'toyota-yaris-1',
-    'vw-polo-1',
-    'vw-polo-2',
-    'vw-polo-3'
-  ]
+  podiumPhotos: {
+    /* EA Sports WRC — zdjęcia rajdowe */
+    wrc: [
+      'citroen-c3-1',
+      'citroen-c3-2',
+      'citroen-c3-3',
+      'ford-fiesta-1',
+      'ford-fiesta-2',
+      'hyundai-i20-1',
+      'hyundai-i20-2',
+      'hyundai-i20-3',
+      'hyundai-i20-4',
+      'hyundai-i20-5',
+      'hyundai-i20-6',
+      'skoda-fabia-1',
+      'skoda-fabia-2',
+      'skoda-fabia-3',
+      'skoda-fabia-4',
+      'skoda-fabia-5',
+      'skoda-fabia-6',
+      'skoda-fabia-7',
+      'skoda-fabia-rs-1',
+      'skoda-fabia-rs-2',
+      'toyota-yaris-1',
+      'vw-polo-1',
+      'vw-polo-2',
+      'vw-polo-3'
+    ],
+    /* Le Mans Ultimate — ujęcia z gry (folder UI, cars-spotlight) */
+    lmu: [
+      'lmu-1',
+      'lmu-2',
+      'lmu-3',
+      'lmu-4',
+      'lmu-5',
+      'lmu-6',
+      'lmu-7',
+      'lmu-8',
+      'lmu-9',
+      'lmu-10',
+      'lmu-11',
+      'lmu-12'
+    ]
+  }
 };
