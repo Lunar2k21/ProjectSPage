@@ -290,6 +290,16 @@ function renderPodium (t2, rows) {
   var order = [1, 0, 2];
   var html = '';
 
+  /* Zdjęcia: model auta z arkusza, wariant po nazwisku, bez powtórek
+     na jednym podium (dobierane w kolejności miejsc 1, 2, 3). */
+  var seria = (currentChamp() || {}).id;
+  var zajete = [];
+  var zdjecia = top.map(function (r, i) {
+    var kto = m.name !== -1 ? String(r[m.name] || '').trim() : '';
+    return PS.photoFile(kto || 'x' + i, seria,
+      [m.car !== -1 ? r[m.car] : '', m.team !== -1 && !m.isTeam ? r[m.team] : ''].join(' '), zajete);
+  });
+
   order.forEach(function (idx) {
     var r = top[idx];
     if (!r) return;
@@ -307,10 +317,8 @@ function renderPodium (t2, rows) {
       ? zaloga(t2, r).map(esc).join(' · ')
       : [car, team].filter(Boolean).map(esc).join(' · ');
 
-    var seed = (tytul || 'x') + '|' + t2.name + '|' + pos;
-
     html += '<article class="pod pod--' + pos + (m.isTeam ? ' pod--team' : '') + '">' +
-              PS.photoImg(PS.photoFile(seed, (currentChamp() || {}).id)) +
+              PS.photoImg(zdjecia[idx]) +
               '<span class="pod__rank" aria-hidden="true">' + pos + '</span>' +
               '<div class="pod__body">' +
                 (div ? '<span class="mono pod__div">' + esc(div) + '</span>' : '') +

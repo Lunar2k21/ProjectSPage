@@ -486,12 +486,18 @@ function renderPodium () {
   var order = [1, 0, 2];   // 2 – 1 – 3, jak na podium
   var html  = '';
 
+  /* Zdjęcia dobieramy w kolejności miejsc (1, 2, 3) — model auta
+     z arkusza, wariant po nazwisku, bez powtórek na jednym podium. */
+  var zajete = [];
+  var zdjecia = rows.map(function (r) {
+    return r.driver ? PS.photoFile(r.driver, podium.champ, [r.car, r.team].join(' '), zajete) : PS.photoFile('x' + r.pos, podium.champ, '', null);
+  });
+
   order.forEach(function (idx) {
     var r = rows[idx];
     if (!r) return;
 
-    var seed  = (r.driver || 'x') + '|' + (podium.round || '') + '|' + r.pos;
-    var media = PS.photoImg(PS.photoFile(seed, podium.champ));
+    var media = PS.photoImg(zdjecia[idx]);
     var time  = PS.czasLadny(r.time) || (CFG.results || {}).emptyTime || '--:--.---';
     var carLbl = [r.car, r.team].filter(Boolean).map(esc).join(' · ');
 

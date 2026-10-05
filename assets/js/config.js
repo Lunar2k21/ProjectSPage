@@ -301,58 +301,76 @@ window.PS_CONFIG = {
 
   /* ---------------------------------------------------------------
      9. ZDJĘCIA NA KAFELKACH PODIUM
-     Osobna pula zdjęć dla każdej serii — bez wiązania z modelem auta,
-     bo kierowcy jeżdżą czym chcą. Każdemu z TOP 3 przydzielane jest zdjęcie
-     losowo, ale STALE: ten sam kierowca w tej samej rundzie dostaje
-     zawsze to samo, więc nic nie przeskakuje przy odświeżeniu.
+     Osobno dla każdej serii, a w niej według auta z kolumn „Samochód”
+     i „Zespół” w arkuszu. Klucz to słowa, które wszystkie muszą wystąpić
+     w nazwie auta lub zespołu (wielkość liter i polskie znaki bez
+     znaczenia); dokładniejszy klucz wygrywa, więc „bmw wrt” trafia przed
+     „bmw m4”, a „skoda fabia rs” przed „skoda fabia”. Kilka zdjęć jednego
+     modelu = warianty: kierowca dostaje zawsze ten sam (po nazwisku),
+     a dwa kafelki jednego podium nie dostaną tego samego obrazka.
+     Auto spoza listy dostaje któreś zdjęcie swojej serii — nigdy
+     z innej.
 
      Pliki leżą w assets/img/podium/ w dwóch szerokościach:
-     <nazwa>-800.webp i <nazwa>-1400.webp. Żeby dorzucić nowe zdjęcie,
-     wrzuć oba rozmiary i dopisz nazwę (bez -800/-1400) do listy
-     właściwej serii. Seria bez własnej listy bierze zdjęcia WRC.
+     <nazwa>-800.webp i <nazwa>-1400.webp. Zdjęcia LMU składa
+     narzedzia/lmu-podium.py z renderów aut i panoram torów z gry.
   --------------------------------------------------------------- */
   podiumPhotos: {
-    /* EA Sports WRC — zdjęcia rajdowe */
-    wrc: [
-      'citroen-c3-1',
-      'citroen-c3-2',
-      'citroen-c3-3',
-      'ford-fiesta-1',
-      'ford-fiesta-2',
-      'hyundai-i20-1',
-      'hyundai-i20-2',
-      'hyundai-i20-3',
-      'hyundai-i20-4',
-      'hyundai-i20-5',
-      'hyundai-i20-6',
-      'skoda-fabia-1',
-      'skoda-fabia-2',
-      'skoda-fabia-3',
-      'skoda-fabia-4',
-      'skoda-fabia-5',
-      'skoda-fabia-6',
-      'skoda-fabia-7',
-      'skoda-fabia-rs-1',
-      'skoda-fabia-rs-2',
-      'toyota-yaris-1',
-      'vw-polo-1',
-      'vw-polo-2',
-      'vw-polo-3'
-    ],
-    /* Le Mans Ultimate — ujęcia z gry (folder UI, cars-spotlight) */
-    lmu: [
-      'lmu-1',
-      'lmu-2',
-      'lmu-3',
-      'lmu-4',
-      'lmu-5',
-      'lmu-6',
-      'lmu-7',
-      'lmu-8',
-      'lmu-9',
-      'lmu-10',
-      'lmu-11',
-      'lmu-12'
-    ]
+    wrc: {
+      auta: {
+        'skoda fabia rs': ['skoda-fabia-rs-1', 'skoda-fabia-rs-2'],
+        'skoda fabia':    ['skoda-fabia-1', 'skoda-fabia-2', 'skoda-fabia-3', 'skoda-fabia-4',
+                           'skoda-fabia-5', 'skoda-fabia-6', 'skoda-fabia-7'],
+        'hyundai i20':    ['hyundai-i20-1', 'hyundai-i20-2', 'hyundai-i20-3', 'hyundai-i20-4',
+                           'hyundai-i20-5', 'hyundai-i20-6'],
+        'citroen c3':     ['citroen-c3-1', 'citroen-c3-2', 'citroen-c3-3'],
+        'ford fiesta':    ['ford-fiesta-1', 'ford-fiesta-2'],
+        'toyota':         ['toyota-yaris-1'],
+        'polo':           ['vw-polo-1', 'vw-polo-2', 'vw-polo-3']
+      }
+    },
+    lmu: {
+      auta: {
+        /* sam model — gdy zespół nie ma własnego zdjęcia */
+        'corvette':     ['lmu-corvette-1', 'lmu-corvette-2'],
+        'bmw m4':       ['lmu-bmw-1', 'lmu-bmw-2', 'lmu-bmw-3'],
+        'porsche 911':  ['lmu-porsche-1', 'lmu-porsche-2'],
+        'mercedes':     ['lmu-mercedes-1', 'lmu-mercedes-2'],
+        'ferrari 296':  ['lmu-ferrari-1', 'lmu-ferrari-2'],
+        'aston martin': ['lmu-aston-1', 'lmu-aston-2'],
+        'mclaren':      ['lmu-mclaren-1', 'lmu-mclaren-2'],
+        'mustang':      ['lmu-mustang-1', 'lmu-mustang-2'],
+        'lexus':        ['lmu-lexus-1', 'lmu-lexus-2'],
+        'lamborghini':  ['lmu-lamborghini-1', 'lmu-lamborghini-2'],
+
+        /* model + zespół (słowa z kolumny „Zespół”) — prawdziwe malowanie */
+        'corvette tf sport':        ['lmu-corvette-1', 'lmu-corvette-2'],
+        'bmw wrt':                  ['lmu-bmw-1', 'lmu-bmw-2', 'lmu-bmw-3'],
+        'porsche iron dames':       ['lmu-porsche-1'],
+        'porsche manthey':          ['lmu-porsche-2'],
+        'mercedes iron lynx':       ['lmu-mercedes-1', 'lmu-mercedes-2'],
+        'ferrari af corse':         ['lmu-ferrari-1', 'lmu-ferrari-2'],
+        'aston heart racing':       ['lmu-aston-1'],
+        'aston racing spirit':      ['lmu-aston-2'],
+        'mclaren united':           ['lmu-mclaren-1', 'lmu-mclaren-2'],
+        'mustang proton':           ['lmu-mustang-1', 'lmu-mustang-2'],
+        'lexus akkodis':            ['lmu-lexus-1', 'lmu-lexus-2'],
+        'lamborghini iron lynx':    ['lmu-lamborghini-1'],
+        'lamborghini iron dames':   ['lmu-lamborghini-2'],
+
+        /* „Custom Team” — własny zespół z gry, czarne malowanie z numerem 397 */
+        'corvette custom team':     ['lmu-corvette-custom'],
+        'bmw m4 custom team':       ['lmu-bmw-custom'],
+        'porsche 911 custom team':  ['lmu-porsche-custom'],
+        'mercedes custom team':     ['lmu-mercedes-custom'],
+        'ferrari 296 custom team':  ['lmu-ferrari-custom'],
+        'aston martin custom team': ['lmu-aston-custom'],
+        'mclaren custom team':      ['lmu-mclaren-custom'],
+        'mustang custom team':      ['lmu-mustang-custom'],
+        'lexus custom team':        ['lmu-lexus-custom'],
+        'lamborghini custom team':  ['lmu-lamborghini-custom']
+      }
+    }
   }
+
 };

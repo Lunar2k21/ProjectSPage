@@ -264,14 +264,50 @@ function seedFrom (str) {
   return Math.abs(h);
 }
 
-/* Zdjęcie do kafelka podium. Pula może być jedna dla wszystkich
-   (lista) albo osobna dla każdej serii ({ wrc: […], lmu: […] }) —
-   wtedy wyścig nie dostaje w tle samochodu rajdowego. */
-function photoFile (seedKey, seria) {
+/* Zdjęcia do kafelków podium.
+   Każda seria ma swoją pulę (WRC nie dostanie auta GT3 i odwrotnie),
+   a w niej zdjęcia przypisane do modelu auta: kierowca jeździ cały
+   sezon tym samym autem, więc na kafelku widać właśnie jego model.
+   Wariant (gdy model ma kilka zdjęć) wybieramy po nazwisku — ten sam
+   kierowca dostaje zawsze to samo zdjęcie — a w obrębie jednego podium
+   pilnujemy, żeby dwa kafelki nie miały identycznego obrazka. */
+function pulaZdjec (seria) {
   var p = CFG.podiumPhotos || [];
-  var pula = Array.isArray(p) ? p : (p[seria] || p.wrc || []);
+  var s = Array.isArray(p) ? p : (p[seria] || p.wrc || []);
+  if (Array.isArray(s)) return { auta: {}, wszystkie: s.slice() };
+  var auta = s.auta || {}, wszystkie = [];
+  Object.keys(auta).concat(['']).forEach(function (k) {
+    (k ? auta[k] : (s.inne || [])).forEach(function (f) {
+      if (wszystkie.indexOf(f) < 0) wszystkie.push(f);
+    });
+  });
+  return { auta: auta, wszystkie: wszystkie };
+}
+
+function photoFile (seedKey, seria, auto, zajete) {
+  var P = pulaZdjec(seria);
+  /* Klucz pasuje, gdy każde jego słowo występuje w nazwie auta i zespołu
+     („bmw wrt" pasuje do „BMW M4 · Team WRT"). Wygrywa najdokładniejszy
+     klucz, więc malowanie zespołu ma pierwszeństwo przed samym modelem. */
+  var nazwa = normalize(auto);
+  var pula = null, dl = 0;
+  if (nazwa) {
+    Object.keys(P.auta).forEach(function (k) {
+      var slowa = normalize(k).split(' ').filter(Boolean);
+      if (!slowa.length) return;
+      var ok = slowa.every(function (w) { return nazwa.indexOf(w) > -1; });
+      var waga = slowa.join('').length;
+      if (ok && waga > dl) { pula = P.auta[k]; dl = waga; }
+    });
+  }
+  if (!pula || !pula.length) pula = P.wszystkie;
   if (!pula.length) return null;
-  return pula[seedFrom(seedKey) % pula.length];
+  var start = seedFrom(seedKey) % pula.length;
+  for (var i = 0; i < pula.length; i++) {
+    var f = pula[(start + i) % pula.length];
+    if (!zajete || zajete.indexOf(f) < 0) { if (zajete) zajete.push(f); return f; }
+  }
+  return pula[start];
 }
 
 /* Seria, której runda skończyła się najpóźniej (spośród podanych) —
