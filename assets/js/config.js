@@ -15,6 +15,7 @@ window.PS_CONFIG = {
   nav: [
     { label: { pl: 'Odnośniki',  en: 'Links'    }, href: 'index.html#hub' },
     { label: { pl: 'Wyniki',     en: 'Results'  }, href: 'wyniki.html' },
+    { label: { pl: 'Klub AC Rally', en: 'AC Rally Club' }, href: 'https://acr.projectsimracing.pl/' },
     { label: { pl: 'Kalendarz',  en: 'Calendar' }, href: 'kalendarz.html' },
     { label: { pl: 'Artykuły',   en: 'Articles' }, href: 'artykuly/' },
     { label: { pl: 'Regulamin',  en: 'Rules'    }, href: 'regulamin/' },
@@ -118,7 +119,8 @@ window.PS_CONFIG = {
   seriesLabel: {
     wrc: { pl: 'EA Sports WRC · Sezon 15', en: 'EA Sports WRC · Season 15' },
     lmu: { pl: 'Le Mans Ultimate · Seasonal Cup · Sezon 1', en: 'Le Mans Ultimate · Seasonal Cup · Season 1' },
-    fh6: { pl: 'Forza Horizon 6 · Sezon 0', en: 'Forza Horizon 6 · Season 0' }
+    fh6: { pl: 'Forza Horizon 6 · Sezon 0', en: 'Forza Horizon 6 · Season 0' },
+    acr: { pl: 'Assetto Corsa Rally · Sezon 1', en: 'Assetto Corsa Rally · Season 1' }
   },
 
   /* Ręczne nadpisanie paska rundy. Zostaw puste name, żeby strona
@@ -162,6 +164,7 @@ window.PS_CONFIG = {
     {
       title: { pl: 'Pozostałe serie', en: 'Other series' },
       links: [
+        { label: { pl: 'Klub AC Rally — rajdy i zapisy', en: 'AC Rally Club — rallies' }, href: 'https://acr.projectsimracing.pl/', tag: 'ACR' },
         { label: 'Assetto Corsa Rally', href: 'https://www.facebook.com/groups/1885078062424849/', tag: 'FB' },
         { label: 'Forza Horizon 6', soon: true },
         { label: { pl: 'Community Cup', en: 'Community Cup' }, soon: true }
@@ -242,8 +245,8 @@ window.PS_CONFIG = {
     {
       id: 'acr',
       label:  'Assetto Corsa Rally',
-      season: { pl: 'Wkrótce', en: 'Soon' },
-      sheetUrl: '',
+      season: { pl: 'Sezon 1', en: 'Season 1' },
+      sheetUrl: 'https://acr.projectsimracing.pl/seasons',
       source: { type: '', url: '' }
     }
   ],

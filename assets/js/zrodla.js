@@ -22,7 +22,7 @@ window.PS_LOCAL = {
     wrc: 'https://script.google.com/macros/s/AKfycbzx3qJy153SDlr6dS03XtGav3t_sHgx_tscX0HCvKpv-VwlwpMFmFx2VpZwIKOTs2Vj/exec',      // EA Sports WRC        — https://script.google.com/macros/s/…/exec
     lmu: 'https://script.google.com/macros/s/AKfycbyts7cW1eqJ4VjCYfpnd6H5WfEUqfo0EbtqWHwdfmemEWC0G6pIPxaEWOd478ikmeD8/exec',      // Le Mans Ultimate
     fh6: '',      // Forza Horizon 6
-    acr: ''       // Assetto Corsa Rally
+    acr: 'https://acr.projectsimracing.pl/api/ps/wyniki'       // Assetto Corsa Rally — serwer klubu ACR
   },
 
   /* ---------------------------------------------------------------
