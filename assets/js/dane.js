@@ -261,7 +261,26 @@ function ostatniaRunda (data) {
   return ostatniaZWynikami(rundy) || ostatniaZWynikami(inne);
 }
 
+/* Auto każdego kierowcy z ostatniej rozegranej rundy, w której jechał.
+   Klasyfikacje (generalna, dywizje) nie mają kolumny z autem — stąd
+   bierzemy, czym kierowca jeździ teraz. Klucz: znormalizowane nazwisko. */
+function autaKierowcow (data) {
+  var mapa = {};
+  zakladki(data).forEach(function (s) {
+    if (!/^\s*\d+\s*[.)]/.test(String(s.name || ''))) return;   // tylko rundy („2. GRE”)
+    var t2 = przygotuj(s);
+    var m = t2.map;
+    if (m.driver === -1 || m.car === -1) return;
+    t2.rows.forEach(function (r) {
+      var kto = norm(r[m.driver]), auto = String(r[m.car] || '').trim();
+      if (kto && auto && maWynik(t2, r)) mapa[kto] = auto;
+    });
+  });
+  return mapa;
+}
+
 PS.dane = {
+  autaKierowcow: autaKierowcow,
   jestDywizja: jestDywizja,
   resolveColumns: resolveColumns,
   przygotuj: przygotuj,

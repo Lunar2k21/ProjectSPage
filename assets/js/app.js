@@ -556,11 +556,64 @@ function renderPodChamps () {
   if (box.hidden) return;
   box.innerHTML = lista.map(function (c) {
     var on = c.id === podium.champ;
+    /* pasek pod aktywną serią odlicza czas do przełączenia */
+    var pasek = on && okresObrotu() ? '<span class="champ__czas" style="--czas:' + okresObrotu() + 'ms"></span>' : '';
     return '<button type="button" class="champ' + (on ? ' is-on' : '') + '" role="tab"' +
            ' aria-selected="' + on + '" data-pod="' + esc(c.id) + '" style="--kolor:' + PS.kolorSerii(c.id) + '">' +
-           '<i class="champ__kropka" aria-hidden="true"></i>' + esc(c.label) + '</button>';
+           '<i class="champ__kropka" aria-hidden="true"></i>' + esc(c.label) + pasek + '</button>';
   }).join('');
+  box.classList.toggle('is-pauza', obrotPauza);
 }
+
+/* ------------------------------------------------------------------
+   PODIUM — przełączanie serii co kilka sekund
+   Bez ruchu, gdy czytelnik prosi o ograniczenie animacji, gdy kursor
+   albo fokus jest nad podium i gdy karta przeglądarki jest w tle.
+------------------------------------------------------------------ */
+var obrotTimer = null, obrotPauza = false;
+
+function okresObrotu () {
+  var ms = CFG.podiumRotacja;
+  if (ms === 0 || reduceMotion || mistrzostwaZWynikami().length < 2) return 0;
+  return ms || 9000;
+}
+
+function planujObrot () {
+  clearTimeout(obrotTimer);
+  var ms = okresObrotu();
+  if (!ms || obrotPauza) return;
+  obrotTimer = setTimeout(function () {
+    if (document.hidden) { renderPodChamps(); planujObrot(); return; }
+    var ids = mistrzostwaZWynikami().map(function (c) { return c.id; });
+    wczytajPodium(ids[(ids.indexOf(podium.champ) + 1) % ids.length]);
+  }, ms);
+}
+
+/* Dane następnej serii pobieramy z wyprzedzeniem — przełączenie jest
+   wtedy natychmiastowe, bez pustych kafelków. */
+function dociagnijNastepna () {
+  var D = PS.dane;
+  var ids = mistrzostwaZWynikami().map(function (c) { return c.id; });
+  var nast = ids[(ids.indexOf(podium.champ) + 1) % ids.length];
+  if (!nast || nast === podium.champ || podiumDane[nast] || !okresObrotu()) return;
+  var ch = D.champ(nast);
+  if (ch) D.pobierz(ch).then(function (data) { podiumDane[nast] = data; }).catch(function () {});
+}
+
+(function () {
+  var sekcja = $('#wyniki');
+  if (!sekcja) return;
+  function pauza (wl) {
+    if (obrotPauza === wl) return;
+    obrotPauza = wl;
+    renderPodChamps();                 // pasek zatrzymuje się albo rusza od nowa
+    planujObrot();
+  }
+  sekcja.addEventListener('mouseenter', function () { pauza(true); });
+  sekcja.addEventListener('mouseleave', function () { pauza(false); });
+  sekcja.addEventListener('focusin', function () { pauza(true); });
+  sekcja.addEventListener('focusout', function (e) { if (!sekcja.contains(e.relatedTarget)) pauza(false); });
+})();
 
 function wczytajPodium (id) {
   var D = PS.dane;
@@ -584,7 +637,7 @@ function wczytajPodium (id) {
     var t2 = D.ostatniaRunda(data);
     podium.demo = !!data.demo;
 
-    if (!t2) { podium.rows = []; podium.round = ''; podium.status = 'empty'; renderPodium(); return; }
+    if (!t2) { podium.rows = []; podium.round = ''; podium.status = 'empty'; renderPodium(); planujObrot(); return; }
 
     var m = t2.map;
     podium.rows = t2.rows.slice(0, 3).map(function (r, i) {
@@ -601,11 +654,14 @@ function wczytajPodium (id) {
     podium.status = 'ok';
     renderPodium();
     renderOstatni();
+    planujObrot();
+    dociagnijNastepna();
   }).catch(function (err) {
     if (nr !== podiumZapytanie) return;
     podium.status = (err && err.kod === 'nosource') ? 'nosource' : 'error';
     if (window.console && podium.status === 'error') console.warn('[podium]', err);
     renderPodium();
+    planujObrot();
   });
 }
 

@@ -277,6 +277,24 @@ function renderDivisions (t2) {
   });
 }
 
+/* Auto w wierszu: z kolumny „Samochód”, a w klasyfikacjach bez niej —
+   z ostatniego rajdu, w którym kierowca jechał. */
+var mapaAut = { data: null, mapa: {} };
+function autoWiersza (t2, r) {
+  var m = t2.map;
+  if (m.car !== -1) return r[m.car] || '';
+  if (m.isTeam || m.driver === -1 || !state.data) return '';
+  if (mapaAut.data !== state.data) mapaAut = { data: state.data, mapa: D.autaKierowcow(state.data) };
+  return mapaAut.mapa[PS.normalize(r[m.driver])] || '';
+}
+
+/* Komórka z autem: małe zdjęcie (gdy seria je ma) i nazwa modelu. */
+function komorkaAuta (auto) {
+  var src = PS.autoMini((currentChamp() || {}).id, auto);
+  return (src ? '<img class="auto-mini" src="' + esc(src) + '" alt="" loading="lazy" decoding="async">' : '') +
+         '<span class="auto-mini__t">' + esc(auto || '') + '</span>';
+}
+
 function renderPodium (t2, rows) {
   var box = $('#podium');
   if (!box) return;
@@ -297,7 +315,7 @@ function renderPodium (t2, rows) {
   var zdjecia = top.map(function (r, i) {
     var kto = m.name !== -1 ? String(r[m.name] || '').trim() : '';
     return PS.photoFile(kto || 'x' + i, seria,
-      [m.car !== -1 ? r[m.car] : '', m.team !== -1 && !m.isTeam ? r[m.team] : ''].join(' '), zajete);
+      [autoWiersza(t2, r), m.team !== -1 && !m.isTeam ? r[m.team] : ''].join(' '), zajete);
   });
 
   order.forEach(function (idx) {
@@ -305,7 +323,7 @@ function renderPodium (t2, rows) {
     if (!r) return;
 
     var pos  = idx + 1;
-    var car  = m.car  !== -1 ? r[m.car]  : '';
+    var car  = autoWiersza(t2, r);
     var team = m.team !== -1 ? r[m.team] : '';
     var time = m.time !== -1 ? PS.czasLadny(r[m.time]) : (m.points !== -1 ? r[m.points] + ' pkt' : '');
     var div  = (m.div !== -1 && jestDywizja(r[m.div])) ? r[m.div] : '';
@@ -356,6 +374,11 @@ function renderTable (t2, rows) {
   cols.push({ key: 'pos', label: t('col.pos'), cls: 'pos' });
   if (m.driver !== -1) cols.push({ key: 'driver', label: t('col.driver'), cls: 'drv' });
   if (m.car    !== -1) cols.push({ key: 'car',    label: t('col.car'),    cls: 'mach' });
+  /* Klasyfikacja bez kolumny z autem: dokładamy auto z ostatniego rajdu. */
+  else if (!m.isTeam && m.driver !== -1 && PS.cfg.autaMini && PS.cfg.autaMini[(currentChamp() || {}).id] &&
+           rows.some(function (r) { return autoWiersza(t2, r); })) {
+    cols.push({ key: 'vcar', label: t('col.car'), cls: 'mach' });
+  }
   if (m.team   !== -1) cols.push({ key: 'team',   label: t('col.team'),   cls: m.isTeam ? 'drv' : 'team' });
   if ((m.crew || []).length) cols.push({ key: 'crew', label: t('col.crew'), cls: 'crew' });
   t2.extra.forEach(function (i) { cols.push({ key: 'x' + i, idx: i, label: t2.headers[i], cls: 'num' }); });
@@ -380,6 +403,10 @@ function renderTable (t2, rows) {
                (lista.length
                  ? lista.map(function (n) { return '<span class="crew__n">' + esc(n) + '</span>'; }).join('')
                  : '<span class="dim">—</span>') + '</td>';
+      }
+
+      if (c.key === 'car' || c.key === 'vcar') {
+        return '<td class="mach" data-label="' + esc(c.label) + '">' + komorkaAuta(autoWiersza(t2, r)) + '</td>';
       }
 
       var v;

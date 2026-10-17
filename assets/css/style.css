@@ -659,6 +659,15 @@ body.is-theater-open { overflow: hidden; }
 
 .champs { display: flex; gap: 8px; flex-wrap: wrap; margin-top: clamp(18px, 2.6vw, 26px); }
 .champs[hidden] { display: none; }
+/* pasek odliczania pod aktywną serią podium (strona główna) */
+.champ { overflow: hidden; }
+.champ__czas {
+  position: absolute; left: 0; bottom: 0; height: 3px; width: 100%;
+  background: rgba(255, 255, 255, .75); transform-origin: left;
+  animation: champCzas var(--czas, 9000ms) linear forwards;
+}
+.podchamps.is-pauza .champ__czas { animation-play-state: paused; }
+@keyframes champCzas { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 /* przełącznik serii nad podium na stronie głównej */
 .podchamps { margin: 0 0 clamp(14px, 2vw, 20px); }
 .podchamps .champ { font-size: 14px; align-items: center; }
@@ -761,6 +770,9 @@ tr.r3 td.pos { color: var(--bronze);  box-shadow: inset 4px 0 0 var(--bronze); }
 
 td.drv { font-weight: 600; white-space: nowrap; }
 td.mach, td.team { color: var(--dim); font-size: 13.5px; }
+/* małe zdjęcie auta przy modelu (WRC) */
+.auto-mini { display: inline-block; vertical-align: middle; width: 84px; height: auto; margin: -10px 10px -10px 0; }
+td.mach { white-space: nowrap; }
 
 /* Skład zespołu — kilku kierowców w jednej komórce, rozdzielonych kropką. */
 td.crew { color: var(--dim); font-size: 13px; line-height: 1.45; min-width: 220px; }
@@ -813,6 +825,7 @@ td.pts { font-weight: 500; }
   td.mach, td.team { flex: 1 0 100%; padding-left: 42px; font-size: 12.5px; }
   td.team::before { content: attr(data-label) ": "; color: var(--dimmer); }
   td.mach:empty, td.team:empty { display: none; }
+  .auto-mini { width: 62px; margin: -6px 8px -6px 0; }
 
   td.num, td.pts { flex: 0 0 auto; margin-right: 12px; font-size: 11.5px; }
   td.num { color: var(--dim); }
@@ -951,9 +964,17 @@ td.pts { font-weight: 500; }
   .nav { display: none; }
   .burger { display: grid; }
   .topbar__cta { display: none; }
-  .podium { grid-template-columns: minmax(0, 1fr); }   /* bez minmax długa nazwa rozpychała kafelek */
-  .pod { min-width: 0; }
-  .pod, .pod--1 { aspect-ratio: 16 / 9; }
+  /* Telefon: zwycięzca na całą szerokość, drugi i trzeci obok siebie
+     pod nim — kolejność 1, 2, 3 zamiast 2–1–3 z komputera. */
+  .podium { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+  .pod { min-width: 0; min-height: 0; aspect-ratio: 4 / 3; }
+  .pod--1 { grid-column: 1 / -1; order: -1; aspect-ratio: 16 / 9; }
+  .pod--2 { order: 0; } .pod--3 { order: 1; }
+  .pod:not(.pod--1) .pod__body { padding: 10px 12px 12px; }
+  .pod:not(.pod--1) .pod__driver { font-size: 16px; }
+  .pod:not(.pod--1) .pod__car { font-size: 11.5px; }
+  .pod:not(.pod--1) .pod__time { font-size: 13px; margin-top: 6px; }
+  .pod:not(.pod--1) .pod__rank { font-size: 54px; top: -4px; }
   .videos { grid-template-columns: 1fr; }
   .nextround__when { margin-left: 0; text-align: left; }
   .nextround__in { gap: 12px; }
@@ -974,7 +995,8 @@ td.pts { font-weight: 500; }
 
 @media (max-width: 560px) {
   .cols { grid-template-columns: 1fr; }
-  .pod__rank { font-size: 66px; top: -4px; }
+  .pod--1 .pod__rank { font-size: 66px; top: -4px; }
+  .pod:not(.pod--1) .pod__car { display: none; }
   .hero { min-height: 0; padding-block: 0; }
   .hero__in { padding-block: 34px 78px; }
   .slide__title { font-size: clamp(32px, 10vw, 44px); }
@@ -1220,7 +1242,13 @@ td.pts { font-weight: 500; }
 .rgrupa .rlist { border-top: 0; }
 .rgrupa .rnd.is-next { background: color-mix(in srgb, var(--kolor) 9%, var(--bg)); box-shadow: inset 3px 0 0 var(--kolor); }
 .rgrupa .rnd.is-next .rnd__n, .rgrupa .rnd.is-next .rnd__badge { color: var(--kolor); }
-.rgrupa .rnd.is-live { box-shadow: inset 3px 0 0 var(--green); }
+/* Obie serie w tym samym stylu: numer rundy w kolorze serii,
+   trwająca — zielona, najbliższa i następna — w kolorze serii. */
+.rgrupa .rnd:not(.is-done) .rnd__n { color: color-mix(in srgb, var(--kolor) 70%, var(--dim)); }
+.rgrupa .rnd.is-live { background: color-mix(in srgb, var(--green) 8%, var(--bg)); box-shadow: inset 3px 0 0 var(--green); }
+.rgrupa .rnd.is-live .rnd__n, .rgrupa .rnd.is-live .rnd__badge { color: var(--green); }
+.rgrupa .rnd.is-po { box-shadow: inset 3px 0 0 color-mix(in srgb, var(--kolor) 55%, transparent); }
+.rgrupa .rnd.is-po .rnd__n, .rgrupa .rnd.is-po .rnd__badge { color: var(--kolor); }
 .rgrupa .rlist__res { color: var(--kolor); }
 
 @media (max-width: 900px) {

@@ -15,7 +15,6 @@ window.PS_CONFIG = {
   nav: [
     { label: { pl: 'Odnośniki',  en: 'Links'    }, href: 'index.html#hub' },
     { label: { pl: 'Wyniki',     en: 'Results'  }, href: 'wyniki.html' },
-    { label: { pl: 'Klub AC Rally', en: 'AC Rally Club' }, href: 'https://acr.projectsimracing.pl/' },
     { label: { pl: 'Kalendarz',  en: 'Calendar' }, href: 'kalendarz.html' },
     { label: { pl: 'Artykuły',   en: 'Articles' }, href: 'artykuly/' },
     { label: { pl: 'Regulamin',  en: 'Rules'    }, href: 'regulamin/' },
@@ -119,8 +118,7 @@ window.PS_CONFIG = {
   seriesLabel: {
     wrc: { pl: 'EA Sports WRC · Sezon 15', en: 'EA Sports WRC · Season 15' },
     lmu: { pl: 'Le Mans Ultimate · Seasonal Cup · Sezon 1', en: 'Le Mans Ultimate · Seasonal Cup · Season 1' },
-    fh6: { pl: 'Forza Horizon 6 · Sezon 0', en: 'Forza Horizon 6 · Season 0' },
-    acr: { pl: 'Assetto Corsa Rally · Sezon 1', en: 'Assetto Corsa Rally · Season 1' }
+    fh6: { pl: 'Forza Horizon 6 · Sezon 0', en: 'Forza Horizon 6 · Season 0' }
   },
 
   /* Ręczne nadpisanie paska rundy. Zostaw puste name, żeby strona
@@ -164,7 +162,6 @@ window.PS_CONFIG = {
     {
       title: { pl: 'Pozostałe serie', en: 'Other series' },
       links: [
-        { label: { pl: 'Klub AC Rally — rajdy i zapisy', en: 'AC Rally Club — rallies' }, href: 'https://acr.projectsimracing.pl/', tag: 'ACR' },
         { label: 'Assetto Corsa Rally', href: 'https://www.facebook.com/groups/1885078062424849/', tag: 'FB' },
         { label: 'Forza Horizon 6', soon: true },
         { label: { pl: 'Community Cup', en: 'Community Cup' }, soon: true }
@@ -245,8 +242,8 @@ window.PS_CONFIG = {
     {
       id: 'acr',
       label:  'Assetto Corsa Rally',
-      season: { pl: 'Sezon 1', en: 'Season 1' },
-      sheetUrl: 'https://acr.projectsimracing.pl/seasons',
+      season: { pl: 'Wkrótce', en: 'Soon' },
+      sheetUrl: '',
       source: { type: '', url: '' }
     }
   ],
@@ -316,20 +313,20 @@ window.PS_CONFIG = {
 
      Pliki leżą w assets/img/podium/ w dwóch szerokościach:
      <nazwa>-800.webp i <nazwa>-1400.webp. Zdjęcia LMU składa
-     narzedzia/lmu-podium.py z renderów aut i panoram torów z gry.
+     narzedzia/lmu-podium.py z renderów aut i panoram torów z gry,
+     zdjęcia WRC — narzedzia/wrc-podium.py z aut z folderu „WRC2 Obrazy”.
   --------------------------------------------------------------- */
   podiumPhotos: {
     wrc: {
       auta: {
-        'skoda fabia rs': ['skoda-fabia-rs-1', 'skoda-fabia-rs-2'],
-        'skoda fabia':    ['skoda-fabia-1', 'skoda-fabia-2', 'skoda-fabia-3', 'skoda-fabia-4',
-                           'skoda-fabia-5', 'skoda-fabia-6', 'skoda-fabia-7'],
-        'hyundai i20':    ['hyundai-i20-1', 'hyundai-i20-2', 'hyundai-i20-3', 'hyundai-i20-4',
-                           'hyundai-i20-5', 'hyundai-i20-6'],
-        'citroen c3':     ['citroen-c3-1', 'citroen-c3-2', 'citroen-c3-3'],
-        'ford fiesta':    ['ford-fiesta-1', 'ford-fiesta-2'],
-        'toyota':         ['toyota-yaris-1'],
-        'polo':           ['vw-polo-1', 'vw-polo-2', 'vw-polo-3']
+        /* auta z gry (folder „WRC2 Obrazy”) na tle odcinka — narzedzia/wrc-podium.py */
+        'skoda':      ['wrc-skoda-1', 'wrc-skoda-2', 'wrc-skoda-3'],
+        'hyundai':    ['wrc-hyundai-1', 'wrc-hyundai-2', 'wrc-hyundai-3'],
+        'citroen':    ['wrc-citroen-1', 'wrc-citroen-2', 'wrc-citroen-3'],
+        'ford':       ['wrc-ford-1', 'wrc-ford-2', 'wrc-ford-3'],
+        'toyota':     ['wrc-toyota-1', 'wrc-toyota-2', 'wrc-toyota-3'],
+        'volkswagen': ['wrc-volkswagen-1', 'wrc-volkswagen-2', 'wrc-volkswagen-3'],
+        'polo':       ['wrc-volkswagen-1', 'wrc-volkswagen-2', 'wrc-volkswagen-3']
       }
     },
     lmu: {
@@ -374,6 +371,29 @@ window.PS_CONFIG = {
         'lamborghini custom team':  ['lmu-lamborghini-custom']
       }
     }
-  }
+  },
 
+  /* ---------------------------------------------------------------
+     10. AUTA W TABELI WYNIKÓW
+     Małe zdjęcie auta przy kierowcy — według modelu z kolumny
+     „Samochód” (klucze jak wyżej). W klasyfikacjach, które nie mają
+     tej kolumny, kierowca dostaje auto z ostatniego rajdu, w którym
+     jechał. Ścieżka względem assets/img/, bez .webp.
+  --------------------------------------------------------------- */
+  autaMini: {
+    wrc: {
+      'skoda':      'wrc/auta/skoda',
+      'hyundai':    'wrc/auta/hyundai',
+      'citroen':    'wrc/auta/citroen',
+      'ford':       'wrc/auta/ford',
+      'toyota':     'wrc/auta/toyota',
+      'volkswagen': 'wrc/auta/volkswagen',
+      'polo':       'wrc/auta/volkswagen'
+    }
+  },
+
+  /* Co ile milisekund podium na stronie głównej przełącza się między
+     seriami (0 = bez przełączania). Kliknięcie serii zaczyna odliczanie
+     od nowa, najechanie myszą je wstrzymuje. */
+  podiumRotacja: 9000
 };

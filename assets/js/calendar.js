@@ -195,6 +195,9 @@ function status (r, s) {
   if (r.live) return { cls: 'is-live', label: t('cal.livenow') };
   if (r.done) return { cls: 'is-done', label: t('cal.done') };
   if (s && s.glowna === r) return { cls: 'is-next', label: t('cal.next') };
+  /* Seria w trakcie rundy (WRC trwa dwa tygodnie): kolejna runda też
+     dostaje kolor serii, żeby obie serie wyglądały tak samo. */
+  if (s && s.potem === r && s.glowna && s.glowna.live) return { cls: 'is-po', label: t('cal.after') };
   if (!r.start) return { cls: 'is-soon', label: t('cal.nodate') };
   return { cls: '', label: t('cal.planned') };
 }

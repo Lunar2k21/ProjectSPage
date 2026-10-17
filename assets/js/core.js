@@ -284,22 +284,32 @@ function pulaZdjec (seria) {
   return { auta: auta, wszystkie: wszystkie };
 }
 
+/* Klucz pasuje, gdy każde jego słowo występuje w nazwie auta i zespołu
+   („bmw wrt" pasuje do „BMW M4 · Team WRT"). Wygrywa najdokładniejszy
+   klucz, więc malowanie zespołu ma pierwszeństwo przed samym modelem. */
+function dopasuj (mapa, tekst) {
+  var nazwa = normalize(tekst), wynik = null, dl = 0;
+  if (!nazwa || !mapa) return null;
+  Object.keys(mapa).forEach(function (k) {
+    var slowa = normalize(k).split(' ').filter(Boolean);
+    if (!slowa.length) return;
+    var ok = slowa.every(function (w) { return nazwa.indexOf(w) > -1; });
+    var waga = slowa.join('').length;
+    if (ok && waga > dl) { wynik = mapa[k]; dl = waga; }
+  });
+  return wynik;
+}
+
+/* Małe zdjęcie auta do tabeli wyników (przezroczyste tło) — według
+   modelu z kolumny „Samochód”. Pusty tekst, gdy serii albo modelu brak. */
+function autoMini (seria, auto) {
+  var plik = dopasuj((CFG.autaMini || {})[seria], auto);
+  return plik ? 'assets/img/' + plik + '.webp' : '';
+}
+
 function photoFile (seedKey, seria, auto, zajete) {
   var P = pulaZdjec(seria);
-  /* Klucz pasuje, gdy każde jego słowo występuje w nazwie auta i zespołu
-     („bmw wrt" pasuje do „BMW M4 · Team WRT"). Wygrywa najdokładniejszy
-     klucz, więc malowanie zespołu ma pierwszeństwo przed samym modelem. */
-  var nazwa = normalize(auto);
-  var pula = null, dl = 0;
-  if (nazwa) {
-    Object.keys(P.auta).forEach(function (k) {
-      var slowa = normalize(k).split(' ').filter(Boolean);
-      if (!slowa.length) return;
-      var ok = slowa.every(function (w) { return nazwa.indexOf(w) > -1; });
-      var waga = slowa.join('').length;
-      if (ok && waga > dl) { pula = P.auta[k]; dl = waga; }
-    });
-  }
+  var pula = dopasuj(P.auta, auto);
   if (!pula || !pula.length) pula = P.wszystkie;
   if (!pula.length) return null;
   var start = seedFrom(seedKey) % pula.length;
@@ -592,7 +602,7 @@ window.PS = {
   $: $, $$: $$, esc: esc, txt: txt, t: t,
   addStrings: addStrings, onLang: onLang, applyLang: applyLang, applyTheme: applyTheme,
   normalize: normalize, seedFrom: seedFrom,
-  photoFile: photoFile, photoImg: photoImg, ostatniaSeria: ostatniaSeria, czasLadny: czasLadny,
+  photoFile: photoFile, photoImg: photoImg, autoMini: autoMini, dopasuj: dopasuj, ostatniaSeria: ostatniaSeria, czasLadny: czasLadny,
   rounds: rounds, nextRound: nextRound, nastepnaPo: nastepnaPo,
   stanSerii: stanSerii, kolorSerii: kolorSerii, odliczanie: odliczanie,
   icsUrl: icsUrl, dateText: dateText, dateRange: dateRange,
