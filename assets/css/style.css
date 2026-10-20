@@ -770,9 +770,17 @@ tr.r3 td.pos { color: var(--bronze);  box-shadow: inset 4px 0 0 var(--bronze); }
 
 td.drv { font-weight: 600; white-space: nowrap; }
 td.mach, td.team { color: var(--dim); font-size: 13.5px; }
-/* małe zdjęcie auta przy modelu (WRC) */
-.auto-mini { display: inline-block; vertical-align: middle; width: 84px; height: auto; margin: -10px 10px -10px 0; }
-td.mach { white-space: nowrap; }
+/* małe zdjęcie auta przy modelu (WRC). Zdjęcie i nazwa w jednym
+   rzędzie, nazwa zawija się w swojej kolumnie zamiast wchodzić na
+   kolumnę „Zespół” przy węższych ekranach. */
+.auto-cel { display: flex; align-items: center; gap: 10px; min-width: 200px; }
+.auto-mini { flex: none; display: block; width: 84px; height: auto; margin: -10px 0; }
+.auto-mini__t { min-width: 0; line-height: 1.3; }
+.tbl-wrap td.team { min-width: 130px; line-height: 1.3; }
+@media (max-width: 1240px) {
+  .auto-mini { width: 64px; margin: -6px 0; }
+  .auto-cel { gap: 8px; min-width: 175px; }
+}
 
 /* Skład zespołu — kilku kierowców w jednej komórce, rozdzielonych kropką. */
 td.crew { color: var(--dim); font-size: 13px; line-height: 1.45; min-width: 220px; }
@@ -825,7 +833,8 @@ td.pts { font-weight: 500; }
   td.mach, td.team { flex: 1 0 100%; padding-left: 42px; font-size: 12.5px; }
   td.team::before { content: attr(data-label) ": "; color: var(--dimmer); }
   td.mach:empty, td.team:empty { display: none; }
-  .auto-mini { width: 62px; margin: -6px 8px -6px 0; }
+  .auto-mini { width: 62px; margin: -6px 0; }
+  .auto-cel { min-width: 0; }
 
   td.num, td.pts { flex: 0 0 auto; margin-right: 12px; font-size: 11.5px; }
   td.num { color: var(--dim); }

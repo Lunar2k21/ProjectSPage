@@ -291,8 +291,10 @@ function autoWiersza (t2, r) {
 /* Komórka z autem: małe zdjęcie (gdy seria je ma) i nazwa modelu. */
 function komorkaAuta (auto) {
   var src = PS.autoMini((currentChamp() || {}).id, auto);
-  return (src ? '<img class="auto-mini" src="' + esc(src) + '" alt="" loading="lazy" decoding="async">' : '') +
-         '<span class="auto-mini__t">' + esc(auto || '') + '</span>';
+  return '<span class="auto-cel">' +
+           (src ? '<img class="auto-mini" src="' + esc(src) + '" alt="" loading="lazy" decoding="async">' : '') +
+           '<span class="auto-mini__t">' + esc(auto || '') + '</span>' +
+         '</span>';
 }
 
 function renderPodium (t2, rows) {
