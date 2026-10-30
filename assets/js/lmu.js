@@ -311,6 +311,14 @@ function parsuj (tekst) {
   /* Plik zaczyna się deklaracją DTD, która w przeglądarce potrafi
      zablokować parser — wycinamy ją, niczego nie zawiera. */
   tekst = String(tekst).replace(/<!DOCTYPE[\s\S]*?\]>/i, '');
+  /* Gra potrafi dopisać do pliku śmieci, przez które przeglądarka
+     odrzuca cały XML: niewidoczne znaki sterujące (np. bajt 0x07 za
+     </rFactorXML>), cokolwiek po znaczniku zamykającym i gołe „&”
+     w wiadomościach z czatu. */
+  tekst = tekst.replace(/^\uFEFF/, '')
+               .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g, '')
+               .replace(/(<\/rFactorXML>)[\s\S]*$/i, '$1')
+               .replace(/&(?!(?:[a-zA-Z][a-zA-Z0-9]*|#\d+|#x[0-9a-fA-F]+);)/g, '&amp;');
   var doc = new DOMParser().parseFromString(tekst, 'application/xml');
   if (doc.getElementsByTagName('parsererror').length) throw new Error('To nie jest poprawny plik XML.');
 
