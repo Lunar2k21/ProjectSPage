@@ -37,6 +37,7 @@ var KLASY = {
   'hypercar': { nazwa: 'Hypercar', kolor: '#D8323F', kolejnosc: 1 },
   'lmp2':     { nazwa: 'LMP2',     kolor: '#4E9BE0', kolejnosc: 2 },
   'lmp2_elms':{ nazwa: 'LMP2 ELMS',kolor: '#4E9BE0', kolejnosc: 2 },
+  'lmp2elms': { nazwa: 'LMP2 ELMS',kolor: '#4E9BE0', kolejnosc: 2 },
   'lmp3':     { nazwa: 'LMP3',     kolor: '#9B7BF0', kolejnosc: 3 },
   'gt3':      { nazwa: 'LMGT3',    kolor: '#E9B949', kolejnosc: 4 },
   'lmgt3':    { nazwa: 'LMGT3',    kolor: '#E9B949', kolejnosc: 4 },
@@ -75,8 +76,11 @@ var MODELE = [
 var PROG_TEMPA = 1.07;
 
 var KLUCZ_NAZW = 'ps-lmu-nazwy';
+var KLUCZ_EDYCJI = 'ps-lmu-edycje';
 
-/* pliki: [{ nazwa, dane }], aktywny: indeks pokazywanego pliku */
+/* pliki: [{ nazwa, dane, tekst, edycje }], aktywny: indeks pokazywanego
+   pliku. „tekst" to oryginalny XML — każda poprawka z edytora czyta go
+   od nowa z nałożonymi „edycjami", więc nic się nie nawarstwia. */
 var stan = { pliki: [], aktywny: -1, zakladka: 'wyniki', nazwy: {} };
 
 function dane () {
@@ -307,7 +311,7 @@ function statystyki (k) {
   k.opony = ll.length ? ll[ll.length - 1].opony : '';
 }
 
-function parsuj (tekst) {
+function parsuj (tekst, edycje) {
   /* Plik zaczyna się deklaracją DTD, która w przeglądarce potrafi
      zablokować parser — wycinamy ją, niczego nie zawiera. */
   tekst = String(tekst).replace(/<!DOCTYPE[\s\S]*?\]>/i, '');
@@ -367,6 +371,8 @@ function parsuj (tekst) {
       status: /finished/i.test(status) ? '' : (/dq|disq/i.test(status) ? 'DSQ' : 'DNF'),
       laps: okrazenia(el)
     };
+    k.id = imie + '|' + k.veh;               // stały klucz dla edytora
+    k.czasGry = k.czas;
     k.kary = zd.kary.filter(function (x) { return x.kto === imie; });
     k.kontakty = zd.kontakty.filter(function (x) { return !x.sciana && (x.kto === imie || x.z === imie); }).length;
     k.sciana = zd.kontakty.filter(function (x) { return x.sciana && x.kto === imie; }).length;
@@ -379,6 +385,7 @@ function parsuj (tekst) {
     kierowcy.push(k);
   }
   kierowcy.sort(function (a, b) { return a.poz - b.poz; });
+  zastosujEdycje(kierowcy, edycje, wyscig);
 
   /* Klasy w kolejności: Hypercar, LMP2, LMGT3… */
   var klasy = {};
@@ -393,7 +400,10 @@ function parsuj (tekst) {
 
   /* Straty, punkty i rekordy liczymy w obrębie klasy. */
   listaKlas.forEach(function (kl) {
-    kl.kierowcy.sort(function (a, b) { return a.pozKlasa - b.pozKlasa; });
+    /* Kolejność z gry (pozycja w całej stawce = kolejność w klasie,
+       działa też po przeniesieniu auta do innej klasy w edytorze). */
+    kl.kierowcy.sort(function (a, b) { return a.poz - b.poz; });
+    ulozKlase(kl, edycje, wyscig);
     var lider = kl.kierowcy[0];
     var ks = kl.kierowcy;
     kl.najl = minimum(ks.map(function (k) { return k.najlepsze; }));
@@ -405,6 +415,7 @@ function parsuj (tekst) {
     ks.forEach(function (k, i) {
       k.najszybszy = !!(kl.najl && k.najlepsze === kl.najl);
       k.punkty = (wyscig && k.ukonczyl && i < PUNKTY.length) ? PUNKTY[i] : 0;
+      if (k.punktyRecznie != null) k.punkty = k.punktyRecznie;
       k.zyskane = (wyscig && k.ukonczyl && k.startKlasa) ? k.startKlasa - k.pozKlasa : null;
 
       if (!wyscig) {
@@ -462,6 +473,109 @@ function parsuj (tekst) {
     klasy: listaKlas,
     zdarzenia: zd
   };
+}
+
+/* ------------------------------------------------------------------
+   EDYTOR — ręczne poprawki wyników z pliku
+   edycje = { k: { <id kierowcy>: { pole: wartość } },
+              kolejnosc: { <klasa>: [id, id, …] } }
+   Poprawki nakładamy na świeżo odczytany plik, a potem liczymy klasy,
+   straty i punkty jak zwykle — dzięki temu tabela, grafika, arkusz
+   i klasyfikacja sezonu widzą to samo.
+------------------------------------------------------------------ */
+var POLA_WYNIKU = ['okr', 'czas', 'kara', 'status', 'klasa'];
+
+/* „1:41.234", „101,234", „52:01.123", „1:00:21.218" -> sekundy */
+function naSekundy (t) {
+  t = String(t == null ? '' : t).trim().replace(',', '.');
+  if (!t) return null;
+  var cz = t.split(':'), s = 0;
+  for (var i = 0; i < cz.length; i++) {
+    var n = parseFloat(cz[i]);
+    if (isNaN(n)) return null;
+    s = s * 60 + n;
+  }
+  return s;
+}
+
+function zastosujEdycje (kierowcy, e, wyscig) {
+  var ee = (e && e.k) || {};
+  kierowcy.forEach(function (k) {
+    var x = ee[k.id];
+    if (!x) return;
+    if (x.nazwa)  k.nazwa = x.nazwa;
+    if (x.zespol != null) k.zespol = x.zespol;
+    if (x.nr != null) k.nr = x.nr;
+    if (x.auto) { k.auto = x.auto; k.marka = marka(x.auto) || k.marka; }
+    if (x.klasa) k.klasaId = x.klasa;
+    if (x.okr != null) k.okr = x.okr;
+    if (x.najlepsze != null) k.najlepsze = x.najlepsze;
+    if (x.czas != null) k.czas = k.czasGry = x.czas;
+    if (x.pit != null) k.pit = x.pit;
+    if (x.status != null) {
+      k.status = x.status;
+      k.ukonczyl = !x.status;
+    }
+    if (x.kara) {
+      k.kara = x.kara;
+      if (k.czas != null) k.czas = k.czasGry + x.kara;
+      k.kary = k.kary.concat([{ rodzaj: '+' + pkt(x.kara) + ' s', powod: 'kara doliczona przez sędziów' }]);
+    }
+    if (x.punkty != null && x.punkty !== '') k.punktyRecznie = x.punkty;
+    k.edytowany = true;
+    k.edytowanyWynik = POLA_WYNIKU.some(function (p) { return x[p] != null && x[p] !== ''; });
+  });
+}
+
+/* Kolejność w klasie po poprawkach: gdy zmienił się wynik (kara,
+   okrążenia, czas, status, klasa) — liczymy ją od nowa jak gra;
+   potem ewentualne ręczne przesunięcia strzałkami. */
+function ulozKlase (kl, e, wyscig) {
+  var ks = kl.kierowcy;
+  if (ks.some(function (k) { return k.edytowanyWynik; })) {
+    var stopien = function (k) { return k.status === 'DSQ' ? 2 : k.ukonczyl ? 0 : 1; };
+    ks.sort(function (a, b) {
+      var r = stopien(a) - stopien(b);
+      if (r) return r;
+      if (!wyscig) return (a.najlepsze || 1e9) - (b.najlepsze || 1e9) || a.poz - b.poz;
+      if (b.okr !== a.okr) return b.okr - a.okr;
+      if (stopien(a) === 0) return (a.czas || 1e9) - (b.czas || 1e9) || a.poz - b.poz;
+      return a.poz - b.poz;
+    });
+  }
+  var kol = e && e.kolejnosc && e.kolejnosc[kl.nazwa];
+  if (kol && kol.length) {
+    var gdzie = {};
+    kol.forEach(function (id, i) { gdzie[id] = i; });
+    var przed = ks.slice();
+    ks.sort(function (a, b) {
+      var ia = a.id in gdzie ? gdzie[a.id] : 1000 + przed.indexOf(a);
+      var ib = b.id in gdzie ? gdzie[b.id] : 1000 + przed.indexOf(b);
+      return ia - ib;
+    });
+  }
+  ks.forEach(function (k, i) { k.pozKlasa = i + 1; });
+}
+
+function wczytajEdycje (plik) {
+  try { return (JSON.parse(localStorage.getItem(KLUCZ_EDYCJI) || '{}') || {})[plik] || null; }
+  catch (e) { return null; }
+}
+
+function zapiszEdycje (plik, edycje) {
+  try {
+    var wszystkie = JSON.parse(localStorage.getItem(KLUCZ_EDYCJI) || '{}') || {};
+    var puste = !edycje || (!Object.keys(edycje.k || {}).length && !Object.keys(edycje.kolejnosc || {}).length);
+    if (puste) delete wszystkie[plik]; else wszystkie[plik] = edycje;
+    localStorage.setItem(KLUCZ_EDYCJI, JSON.stringify(wszystkie));
+  } catch (e) {}
+}
+
+function ileEdycji (edycje) {
+  if (!edycje) return 0;
+  var n = 0;
+  Object.keys(edycje.k || {}).forEach(function (id) { n += Object.keys(edycje.k[id]).length; });
+  return n + Object.keys(edycje.kolejnosc || {}).length;
 }
 
 /* ------------------------------------------------------------------
@@ -1000,6 +1114,158 @@ function htmlSezon () {
 }
 
 /* ------------------------------------------------------------------
+   ZAKŁADKA: EDYTOR
+------------------------------------------------------------------ */
+var NAZWY_KLAS = ['Hypercar', 'LMP2', 'LMP2 ELMS', 'LMP3', 'LMGT3', 'GTE'];
+
+function htmlEdytor (d) {
+  var p = stan.pliki[stan.aktywny];
+  var x = (p.edycje && p.edycje.k) || {};
+  var ile = ileEdycji(p.edycje);
+  var punkty = d.wyscig;
+
+  function pole (k, nazwaPola, wartosc, oryg, opcje) {
+    opcje = opcje || {};
+    var zm = x[k.id] && x[k.id][nazwaPola] != null;
+    return '<input class="lmu-ed__in' + (opcje.w ? ' lmu-ed__in--' + opcje.w : '') + (zm ? ' is-zm' : '') + '"' +
+      ' data-e="' + esc(k.id) + '" data-pole="' + nazwaPola + '"' +
+      ' value="' + esc(wartosc == null ? '' : wartosc) + '"' +
+      (opcje.ph != null ? ' placeholder="' + esc(opcje.ph) + '"' : '') +
+      (opcje.num ? ' inputmode="decimal"' : '') +
+      ' title="' + esc(zm ? 'W pliku: ' + (oryg == null || oryg === '' ? '—' : oryg) : opcje.tytul || '') + '"' +
+      ' aria-label="' + esc(opcje.etyk || nazwaPola) + ' — ' + esc(nazwa(k.nazwa)) + '">';
+  }
+
+  function wybor (k, nazwaPola, wartosc, lista) {
+    var zm = x[k.id] && x[k.id][nazwaPola] != null;
+    return '<select class="lmu-ed__in' + (zm ? ' is-zm' : '') + '" data-e="' + esc(k.id) + '" data-pole="' + nazwaPola + '"' +
+      ' aria-label="' + esc(nazwaPola + ' — ' + nazwa(k.nazwa)) + '">' +
+      lista.map(function (o) {
+        return '<option value="' + esc(o[0]) + '"' + (o[0] === wartosc ? ' selected' : '') + '>' + esc(o[1]) + '</option>';
+      }).join('') + '</select>';
+  }
+
+  var html = '<div class="lmu-ed__pasek">' +
+    '<p>Poprawki działają od razu w tabeli, na grafice, w arkuszu i w klasyfikacji sezonu. ' +
+    'Zapisują się w tej przeglądarce przy pliku <b>' + esc(p.nazwa) + '</b> — po ponownym wczytaniu tego pliku wrócą same. ' +
+    'Zmienione pola są podświetlone; po najechaniu widać wartość z pliku. ' +
+    'Kara, okrążenia, czas, status albo klasa przeliczają kolejność w klasie; strzałkami ustawisz ją ręcznie.</p>' +
+    '<button type="button" class="lmu-ed__reset" data-reset' + (ile ? '' : ' disabled') + '>' +
+      'Przywróć dane z pliku' + (ile ? ' (' + ile + ')' : '') + '</button>' +
+  '</div>';
+
+  d.klasy.forEach(function (kl) {
+    var n = kl.kierowcy.length;
+    html += htmlKlasa(kl,
+      '<div class="tbl-wrap lmu-ed"><table class="lmu-tab lmu-ed__tab"><thead><tr>' +
+        '<th></th><th class="th-pos">Poz</th><th>Nr</th><th>Kierowca</th><th>Zespół</th><th>Auto</th><th>Klasa</th>' +
+        '<th class="th-num">Okr.</th><th class="th-num">' + (d.wyscig ? 'Czas wyścigu' : 'Czas') + '</th>' +
+        (d.wyscig ? '<th class="th-num">Kara (s)</th>' : '') +
+        '<th class="th-num">Najlepsze</th><th class="th-num">Pit</th><th>Status</th>' +
+        (punkty ? '<th class="th-pts">Pkt</th>' : '') +
+      '</tr></thead><tbody>' +
+      kl.kierowcy.map(function (k, i) {
+        var e = x[k.id] || {};
+        return '<tr class="' + (k.edytowany ? 'is-zm' : '') + (k.status ? ' is-dnf' : '') + '">' +
+          '<td class="lmu-ed__ruch">' +
+            '<button type="button" data-ruch="-1" data-e="' + esc(k.id) + '"' + (i ? '' : ' disabled') + ' aria-label="Wyżej">▲</button>' +
+            '<button type="button" data-ruch="1" data-e="' + esc(k.id) + '"' + (i < n - 1 ? '' : ' disabled') + ' aria-label="Niżej">▼</button>' +
+          '</td>' +
+          '<td class="pos">' + (k.status ? '—' : k.pozKlasa) + '</td>' +
+          '<td>' + pole(k, 'nr', k.nr, '', { w: 'xs', etyk: 'Numer' }) + '</td>' +
+          '<td>' + pole(k, 'nazwa', nazwa(k.nazwa), k.nazwaPliku, { w: 'l', etyk: 'Kierowca' }) + '</td>' +
+          '<td>' + pole(k, 'zespol', nazwa(k.zespol), '', { w: 'l', etyk: 'Zespół' }) + '</td>' +
+          '<td>' + pole(k, 'auto', k.auto, '', { w: 'm', etyk: 'Auto' }) + '</td>' +
+          '<td>' + wybor(k, 'klasa', k.klasa, NAZWY_KLAS.concat(NAZWY_KLAS.indexOf(k.klasa) === -1 ? [k.klasa] : [])
+                     .map(function (n2) { return [n2, n2]; })) + '</td>' +
+          '<td>' + pole(k, 'okr', k.okr, '', { w: 'xs', num: 1, etyk: 'Okrążenia' }) + '</td>' +
+          '<td>' + pole(k, 'czas', czas(d.wyscig ? k.czasGry : k.najlepsze), '', { w: 's', num: 1, ph: '1:00:21.218', etyk: 'Czas' }) + '</td>' +
+          (d.wyscig ? '<td>' + pole(k, 'kara', e.kara ? pkt(e.kara) : '', '', { w: 'xs', num: 1, ph: '0', etyk: 'Kara w sekundach',
+                         tytul: 'Sekundy doliczane do czasu wyścigu' }) + '</td>' : '') +
+          '<td>' + pole(k, 'najlepsze', czas(k.najlepsze), '', { w: 's', num: 1, ph: '1:41.234', etyk: 'Najlepsze okrążenie' }) + '</td>' +
+          '<td>' + pole(k, 'pit', k.pit, '', { w: 'xs', num: 1, etyk: 'Pit' }) + '</td>' +
+          '<td>' + wybor(k, 'status', k.status, [['', 'Ukończył'], ['DNF', 'DNF'], ['DSQ', 'DSQ']]) + '</td>' +
+          (punkty ? '<td>' + pole(k, 'punkty', e.punkty != null ? e.punkty : '', '', { w: 'xs', num: 1, ph: String(k.punkty || 0),
+                       etyk: 'Punkty', tytul: 'Puste = punkty z regulaminu' }) + '</td>' : '') +
+        '</tr>';
+      }).join('') +
+      '</tbody></table></div>', n + ' aut');
+  });
+  return html;
+}
+
+/* Zmiana jednego pola w edytorze. */
+function edytuj (id, pole, wartosc) {
+  var p = stan.pliki[stan.aktywny];
+  if (!p) return;
+  var e = p.edycje = p.edycje || { k: {}, kolejnosc: {} };
+  e.k = e.k || {}; e.kolejnosc = e.kolejnosc || {};
+  var k = null;
+  p.dane.kierowcy.forEach(function (kk) { if (kk.id === id) k = kk; });
+  if (!k) return;
+
+  /* wartość z pliku — gdy wpisana jest taka sama, poprawka znika */
+  var surowe = parsuj(p.tekst, null).kierowcy.filter(function (kk) { return kk.id === id; })[0] || {};
+  var v = String(wartosc == null ? '' : wartosc).trim(), nowa;
+
+  if (pole === 'okr' || pole === 'pit' || pole === 'punkty') {
+    nowa = v === '' ? null : parseInt(v, 10);
+    if (v !== '' && isNaN(nowa)) return blad('„' + v + '" to nie liczba.');
+    if (pole !== 'punkty' && nowa === surowe[pole]) nowa = null;
+  } else if (pole === 'czas' || pole === 'najlepsze') {
+    nowa = v === '' ? null : naSekundy(v);
+    if (v !== '' && nowa == null) return blad('Nie rozumiem czasu „' + v + '" — wpisz np. 1:41.234 albo 52:01.123.');
+    var bylo = pole === 'czas' && !p.dane.wyscig ? surowe.najlepsze : surowe[pole];
+    if (nowa != null && bylo != null && Math.abs(nowa - bylo) < 0.0005) nowa = null;
+    if (pole === 'czas' && !p.dane.wyscig) pole = 'najlepsze';
+  } else if (pole === 'kara') {
+    nowa = v === '' ? null : naSekundy(v);
+    if (v !== '' && nowa == null) return blad('Karę wpisz w sekundach, np. 5 albo 30.');
+    if (!nowa) nowa = null;
+  } else if (pole === 'status') {
+    nowa = v === surowe.status ? null : v;
+  } else if (pole === 'klasa') {
+    nowa = v === klasa(surowe.klasaId).nazwa ? null : v;
+  } else {
+    var zPliku = pole === 'nazwa' ? nazwa(surowe.nazwa) : pole === 'zespol' ? nazwa(surowe.zespol) : surowe[pole];
+    nowa = (v === '' || v === zPliku) ? null : v;
+  }
+  blad('');
+
+  var x = e.k[id] = e.k[id] || {};
+  if (nowa == null) delete x[pole]; else x[pole] = nowa;
+  if (!Object.keys(x).length) delete e.k[id];
+
+  /* zmiana wyniku = kolejność liczona od nowa, bez ręcznych przesunięć */
+  if (POLA_WYNIKU.indexOf(pole) !== -1) {
+    delete e.kolejnosc[k.klasa];
+    if (pole === 'klasa' && nowa) delete e.kolejnosc[nowa];
+  }
+  przeliczPlik(p);
+}
+
+function przesun (id, kierunek) {
+  var p = stan.pliki[stan.aktywny];
+  var kl = null;
+  p.dane.klasy.forEach(function (k) { k.kierowcy.forEach(function (kk) { if (kk.id === id) kl = k; }); });
+  if (!kl) return;
+  var ids = kl.kierowcy.map(function (k) { return k.id; });
+  var i = ids.indexOf(id), j = i + kierunek;
+  if (j < 0 || j >= ids.length) return;
+  ids[i] = ids[j]; ids[j] = id;
+  var e = p.edycje = p.edycje || { k: {}, kolejnosc: {} };
+  e.kolejnosc = e.kolejnosc || {};
+  e.kolejnosc[kl.nazwa] = ids;
+  przeliczPlik(p);
+}
+
+function przeliczPlik (p) {
+  p.dane = parsuj(p.tekst, p.edycje);
+  zapiszEdycje(p.nazwa, p.edycje);
+  render();
+}
+
+/* ------------------------------------------------------------------
    RYSOWANIE STRONY
 ------------------------------------------------------------------ */
 function renderPliki () {
@@ -1009,7 +1275,8 @@ function renderPliki () {
     return '<span class="lmu-plik' + (i === stan.aktywny ? ' is-on' : '') + '">' +
       '<button type="button" data-plik="' + i + '">' +
         '<b>' + esc(d.tor.nazwa || p.nazwa) + '</b>' +
-        '<small class="mono">' + esc(dataKropki(d.data)) + ' · ' + esc(d.rodzaj) + '</small>' +
+        '<small class="mono">' + esc(dataKropki(d.data)) + ' · ' + esc(d.rodzaj) +
+          (ileEdycji(p.edycje) ? ' · poprawiony' : '') + '</small>' +
       '</button>' +
       '<button type="button" class="lmu-plik__x" data-usun="' + i + '" aria-label="Usuń ' + esc(p.nazwa) + '">×</button>' +
     '</span>';
@@ -1042,9 +1309,19 @@ function render () {
     html += stan.zakladka === 'przebieg' ? htmlPrzebieg(d)
           : stan.zakladka === 'okrazenia' ? htmlOkrazenia(d)
           : stan.zakladka === 'incydenty' ? htmlIncydenty(d)
+          : stan.zakladka === 'edytor' ? htmlEdytor(d)
           : htmlWyniki(d);
   }
+  /* Edytor: po przerysowaniu kursor wraca do pola, w którym był. */
+  var a = document.activeElement, fokus = a && box.contains(a) && a.getAttribute('data-e')
+    ? [a.getAttribute('data-e'), a.getAttribute('data-pole') || a.getAttribute('data-ruch')] : null;
   box.innerHTML = html;
+  if (fokus) {
+    [].some.call(box.querySelectorAll('[data-e]'), function (el) {
+      if (el.getAttribute('data-e') === fokus[0] &&
+          (el.getAttribute('data-pole') || el.getAttribute('data-ruch')) === fokus[1]) { el.focus(); return true; }
+    });
+  }
   $('#lmuInfo').textContent = stan.pliki[stan.aktywny].nazwa + ' · ' + d.kierowcy.length + ' kierowców' +
     (stan.pliki.length > 1 ? ' · plików: ' + stan.pliki.length : '');
 }
@@ -1658,16 +1935,17 @@ function ustawPola () {
 }
 
 function dodaj (tekst, plik) {
-  var d;
-  try { d = parsuj(tekst); } catch (e) {
+  var d, edycje = wczytajEdycje(plik);
+  try { d = parsuj(tekst, edycje); } catch (e) {
     blad('Nie udało się odczytać pliku ' + plik + ': ' + e.message);
     return false;
   }
   /* ten sam plik drugi raz — podmieniamy */
   var jest = -1;
   stan.pliki.forEach(function (p, i) { if (p.nazwa === plik) jest = i; });
-  if (jest > -1) stan.pliki[jest].dane = d;
-  else stan.pliki.push({ nazwa: plik, dane: d });
+  var wpis = { nazwa: plik, dane: d, tekst: tekst, edycje: edycje };
+  if (jest > -1) stan.pliki[jest] = wpis;
+  else stan.pliki.push(wpis);
   stan.aktywny = jest > -1 ? jest : stan.pliki.length - 1;
   return true;
 }
@@ -1798,6 +2076,50 @@ function start () {
     }
     ustawPola();
     render();
+  });
+
+  /* Style edytora siedzą w osobnym pliku — dociągamy go, jeśli strona
+     sama go nie wczytała. */
+  if (!document.querySelector('link[href*="lmu-edytor.css"]')) {
+    var css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = 'assets/css/lmu-edytor.css';
+    document.head.appendChild(css);
+  }
+
+  /* Zakładka edytora — dokładamy ją sami, gdyby lmu.html był starszy. */
+  var zakl = $('#lmuZakl');
+  if (zakl && !zakl.querySelector('[data-z="edytor"]')) {
+    var wzor = zakl.querySelector('[data-z]');
+    var bEd = wzor ? wzor.cloneNode(false) : document.createElement('button');
+    bEd.setAttribute('data-z', 'edytor');
+    bEd.classList.remove('is-on');
+    bEd.textContent = 'Edytor';
+    var sez = zakl.querySelector('[data-z="sezon"]');
+    zakl.insertBefore(bEd, sez || null);
+  }
+
+  var podglad = $('#lmuPodglad');
+  podglad.addEventListener('change', function (e) {
+    var el = e.target;
+    if (!el.hasAttribute || !el.hasAttribute('data-pole')) return;
+    var id = el.getAttribute('data-e'), pole = el.getAttribute('data-pole'), v = el.value;
+    setTimeout(function () { edytuj(id, pole, v); }, 0);   // najpierw fokus przejdzie do następnego pola
+  });
+  podglad.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('lmu-ed__in')) e.target.blur();
+  });
+  podglad.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('button');
+    if (!b) return;
+    if (b.hasAttribute('data-ruch')) przesun(b.getAttribute('data-e'), +b.getAttribute('data-ruch'));
+    if (b.hasAttribute('data-reset')) {
+      var p = stan.pliki[stan.aktywny];
+      if (!window.confirm('Usunąć wszystkie poprawki pliku ' + p.nazwa + ' i wrócić do danych z gry?')) return;
+      p.edycje = null;
+      przeliczPlik(p);
+      info('Przywrócono dane z pliku.');
+    }
   });
 
   $('#lmuZakl').addEventListener('click', function (e) {

@@ -36,6 +36,7 @@ PS.addStrings({
     'res.searchPh': 'Szukaj kierowcy…',
     'res.updated': 'Zaktualizowano',
     'res.checked': 'Sprawdzono',
+    'res.refreshing': 'odświeżanie…',
     'res.longago': 'dawno temu',
     'res.justnow': 'przed chwilą',
     'res.ago': 'temu',
@@ -64,6 +65,7 @@ PS.addStrings({
     'res.searchPh': 'Search driver…',
     'res.updated': 'Updated',
     'res.checked': 'Checked',
+    'res.refreshing': 'refreshing…',
     'res.longago': 'a long time ago',
     'res.justnow': 'just now',
     'res.ago': 'ago',
@@ -98,10 +100,12 @@ var state = {
   updated: 0,      // znacznik zmiany z arkusza — ciąg znaków, NIE data
   checkedAt: 0,    // kiedy strona ostatnio pytała źródło
   changedAt: 0,    // kiedy znacznik ostatnio się zmienił (0 = nie wiemy)
-  demo: false
+  demo: false,
+  odswiezanie: false // na ekranie dane z pamięci przeglądarki, świeże w drodze
 };
 
 var pollTimer = null;
+var zapytanie = 0;    // numer ostatniego pobrania — starsze odpowiedzi ignorujemy
 var agoTimer  = null;
 
 /* ------------------------------------------------------------------
@@ -114,24 +118,50 @@ function loadChampionship (force) {
   if (!ch) return;
 
   var zywe = !!(ch.source && ch.source.url);
-  if (zywe) { state.status = 'loading'; state.demo = false; renderAll(); }
+  var nr = ++zapytanie;
+  var mamy = false;                 // czy coś już wisi na ekranie (z pamięci)
 
-  D.pobierz(ch).then(function (data) {
+  function przyjmij (data, zPamieci) {
+    if (nr !== zapytanie) return;   // czytelnik zdążył przełączyć serię
     var poprzedni = state.updated;
 
     state.data      = data;
     state.demo      = !!data.demo;
     state.updated   = data.updated || '';
-    state.checkedAt = Date.now();
-    if (poprzedni && poprzedni !== state.updated) state.changedAt = Date.now();
+    state.checkedAt = zPamieci ? data.zPamieci : Date.now();
+    if (!zPamieci && poprzedni && poprzedni !== state.updated) state.changedAt = Date.now();
     state.status = 'ok';
+    state.odswiezanie = !!zPamieci;
 
     if (state.tab >= D.zakladki(data).length) state.tab = 0;
-    if (typeof wybierzZadanaZakladke === 'function') wybierzZadanaZakladke();
+    if (!mamy && typeof wybierzZadanaZakladke === 'function') wybierzZadanaZakladke();
+    mamy = true;
 
     renderAll();
+  }
+
+  if (zywe && !force && !D.zPamieci(ch)) { state.status = 'loading'; state.demo = false; renderAll(); }
+
+  (force ? D.pobierz(ch).then(function (d) { przyjmij(d, false); return d; })
+         : D.pobierzSzybko(ch, przyjmij)
+  ).then(function () {
+    if (nr !== zapytanie) return;
+    state.checkedAt = Date.now();
+    if (state.odswiezanie) { state.odswiezanie = false; renderStatus(); }
     if (zywe) schedulePoll();
   }).catch(function (err) {
+    if (nr !== zapytanie) return;
+    state.odswiezanie = false;
+
+    /* Arkusz chwilowo nie odpowiada, ale mamy dane z pamięci albo
+       z poprzedniego pobrania — zostawiamy je i próbujemy dalej. */
+    if (mamy || (force && state.data)) {
+      if (window.console) console.warn('[wyniki] odświeżenie nieudane', err);
+      renderStatus();
+      schedulePoll();
+      return;
+    }
+
     state.data = null;
     state.demo = false;
     state.tab  = 0;
@@ -227,10 +257,16 @@ function currentSheet () {
   return list[state.tab] ? prepare(list[state.tab]) : null;
 }
 
+/* Klasy wyścigowe w bieżącej zakładce (LMU) — wtedy przyciski nad
+   tabelą to osobne klasyfikacje, a nie filtr jednej tabeli. */
+function klasyZakladki (t2) { return t2 ? D.klasy(t2) : null; }
+
 function filterRows (t2, ignoreQuery) {
   var q = ignoreQuery ? '' : state.query.trim().toLowerCase();
-  return t2.rows.filter(function (r) {
-    if (state.division !== 'all') {
+  var kl = klasyZakladki(t2);
+  var baza = kl ? D.wierszeKlasy(t2, state.division) : t2.rows;
+  return baza.filter(function (r) {
+    if (!kl && state.division !== 'all') {
       if (t2.map.div === -1) return false;
       if (norm(r[t2.map.div]) !== norm(state.division)) return false;
     }
@@ -252,6 +288,24 @@ function renderDivisions (t2) {
 
   if (!t2 || t2.map.div === -1 || !t2.rows.length) { wrap.hidden = true; return; }
 
+  var kl = klasyZakladki(t2);
+  if (kl) {
+    /* osobne klasyfikacje — bez „Wszystkie”, domyślnie klasa główna */
+    if (kl.indexOf(state.division) === -1) state.division = kl[0];
+    wrap.hidden = false;
+    box.innerHTML = kl.map(function (d) {
+      return '<button type="button" class="chip' + (state.division === d ? ' is-on' : '') + '"' +
+             ' data-div="' + esc(d) + '">' + esc(d) + '</button>';
+    }).join('');
+    $$('[data-div]', box).forEach(function (b) {
+      b.addEventListener('click', function () {
+        state.division = b.getAttribute('data-div');
+        renderBody();
+      });
+    });
+    return;
+  }
+
   var seen = [];
   t2.rows.forEach(function (r) {
     var v = String(r[t2.map.div] || '').trim();
@@ -262,6 +316,7 @@ function renderDivisions (t2) {
   /* Zakładka jednej dywizji (np. „Div. PSR1") ma wszystkie wiersze
      w tej samej dywizji — filtry byłyby tam powtórzeniem zakładek. */
   if (seen.length < 2) { wrap.hidden = true; state.division = 'all'; return; }
+  if (state.division !== 'all' && seen.indexOf(state.division) === -1) state.division = 'all';
   wrap.hidden = false;
 
   box.innerHTML = ['all'].concat(seen).map(function (d) {
@@ -316,8 +371,8 @@ function renderPodium (t2, rows) {
   var zajete = [];
   var zdjecia = top.map(function (r, i) {
     var kto = m.name !== -1 ? String(r[m.name] || '').trim() : '';
-    return PS.photoFile(kto || 'x' + i, seria,
-      [autoWiersza(t2, r), m.team !== -1 && !m.isTeam ? r[m.team] : ''].join(' '), zajete);
+    return D.zdjecieAuta(kto || 'x' + i, seria,
+      autoWiersza(t2, r), m.team !== -1 && !m.isTeam ? r[m.team] : '', zajete);
   });
 
   order.forEach(function (idx) {
@@ -372,6 +427,7 @@ function renderTable (t2, rows) {
   }
 
   var m = t2.map;
+  var wKlasie = !!klasyZakladki(t2);
   var cols = [];
   cols.push({ key: 'pos', label: t('col.pos'), cls: 'pos' });
   if (m.driver !== -1) cols.push({ key: 'driver', label: t('col.driver'), cls: 'drv' });
@@ -392,9 +448,9 @@ function renderTable (t2, rows) {
   }).join('') + '</tr>';
 
   var body = rows.map(function (r, n) {
-    var place = m.pos !== -1 && String(r[m.pos]).trim() ? String(r[m.pos]).trim() : String(n + 1);
+    var place = r.poz || (m.pos !== -1 && String(r[m.pos]).trim() ? String(r[m.pos]).trim() : String(n + 1));
     var rank  = parseInt(place, 10);
-    var cls   = (state.division === 'all' && rank >= 1 && rank <= 3) ? ' class="r' + rank + '"' : '';
+    var cls   = ((state.division === 'all' || wKlasie) && rank >= 1 && rank <= 3) ? ' class="r' + rank + '"' : '';
 
     var cells = cols.map(function (c) {
       /* Skład zespołu — jedna komórka zamiast trzech bezimiennych kolumn,
@@ -417,7 +473,7 @@ function renderTable (t2, rows) {
       else v = r[m[c.key]];
 
       if (c.key === 'time') v = String(v).trim() ? PS.czasLadny(v) : t('pod.notime');
-      if (c.key === 'driver' && m.div !== -1 && jestDywizja(r[m.div])) {
+      if (c.key === 'driver' && m.div !== -1 && !wKlasie && jestDywizja(r[m.div])) {
         return '<td class="' + c.cls + '" data-label="' + esc(c.label) + '">' + esc(v) +
                '<span class="pill pill--div">' + esc(r[m.div]) + '</span></td>';
       }
@@ -478,6 +534,7 @@ function renderStatus () {
          znaków, nie datą, więc czas liczymy po stronie przeglądarki. */
       var txt2 = t('res.checked') + ': ' + agoText(state.checkedAt);
       if (state.changedAt) txt2 += ' · ' + t('res.updated') + ': ' + agoText(state.changedAt);
+      if (state.odswiezanie) txt2 += ' · ' + t('res.refreshing');
       up.textContent = txt2;
     }
   }
@@ -500,9 +557,9 @@ function renderStatus () {
 
 function renderBody () {
   var t2 = currentSheet();
-  var rows = t2 ? filterRows(t2) : [];
   renderTabs();
-  renderDivisions(t2);
+  renderDivisions(t2);          // najpierw — ustala klasę/dywizję dla filtrów
+  var rows = t2 ? filterRows(t2) : [];
   renderPodium(t2, t2 ? filterRows(t2, true) : []);
   renderTable(t2, rows);
   renderStatus();

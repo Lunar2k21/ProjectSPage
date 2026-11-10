@@ -490,7 +490,10 @@ function renderPodium () {
      z arkusza, wariant po nazwisku, bez powtórek na jednym podium. */
   var zajete = [];
   var zdjecia = rows.map(function (r) {
-    return r.driver ? PS.photoFile(r.driver, podium.champ, [r.car, r.team].join(' '), zajete) : PS.photoFile('x' + r.pos, podium.champ, '', null);
+    if (r.driver) return PS.dane.zdjecieAuta(r.driver, podium.champ, r.car, r.team, zajete);
+    /* Dopóki dane jadą, kafelki są gładkie — nie ma sensu ściągać zdjęć,
+       które za chwilę zastąpią auta zwycięzców. */
+    return podium.status === 'loading' ? null : PS.photoFile('x' + r.pos, podium.champ, '', null);
   });
 
   order.forEach(function (idx) {
@@ -570,7 +573,7 @@ function renderPodChamps () {
    Bez ruchu, gdy czytelnik prosi o ograniczenie animacji, gdy kursor
    albo fokus jest nad podium i gdy karta przeglądarki jest w tle.
 ------------------------------------------------------------------ */
-var obrotTimer = null, obrotPauza = false;
+var obrotTimer = null, obrotPauza = false, dociagane = {};
 
 function okresObrotu () {
   var ms = CFG.podiumRotacja;
@@ -595,9 +598,15 @@ function dociagnijNastepna () {
   var D = PS.dane;
   var ids = mistrzostwaZWynikami().map(function (c) { return c.id; });
   var nast = ids[(ids.indexOf(podium.champ) + 1) % ids.length];
-  if (!nast || nast === podium.champ || podiumDane[nast] || !okresObrotu()) return;
+  if (!nast || nast === podium.champ || !okresObrotu()) return;
+  if (podiumDane[nast] && !podiumDane[nast].zPamieci) return;
   var ch = D.champ(nast);
-  if (ch) D.pobierz(ch).then(function (data) { podiumDane[nast] = data; }).catch(function () {});
+  if (!ch) return;
+  if (!podiumDane[nast]) { var p = D.zPamieci(ch); if (p) podiumDane[nast] = p; }
+  if (dociagane[nast]) return;
+  dociagane[nast] = true;
+  D.pobierz(ch).then(function (data) { podiumDane[nast] = data; })
+    .catch(function () {}).then(function () { dociagane[nast] = false; });
 }
 
 (function () {
@@ -624,23 +633,25 @@ function wczytajPodium (id) {
   if (!ch) { podium.status = 'nosource'; renderPodium(); return; }
 
   var nr = ++podiumZapytanie;
-  var gotowe = podiumDane[podium.champ];
-  if (!gotowe) {
-    /* nowa seria: puste kafelki, zanim przyjdą dane */
-    podium.rows = []; podium.round = ''; podium.status = 'loading';
-    renderPodium();
-  }
+  var id2 = podium.champ;
+  /* Najpierw dane już pobrane w tej wizycie, potem pamięć przeglądarki
+     z poprzedniej wizyty — podium pojawia się od razu, a świeże dane
+     z arkusza podmieniają je, gdy przyjdą i coś się zmieniło. */
+  var gotowe = podiumDane[id2] || D.zPamieci(ch);
+  var swieze = !!(podiumDane[id2] && !podiumDane[id2].zPamieci);
 
-  (gotowe ? Promise.resolve(gotowe) : D.pobierz(ch)).then(function (data) {
+  function pokaz (data) {
     if (nr !== podiumZapytanie) return;          // czytelnik zdążył przełączyć serię
-    podiumDane[podium.champ] = data;
     var t2 = D.ostatniaRunda(data);
     podium.demo = !!data.demo;
 
     if (!t2) { podium.rows = []; podium.round = ''; podium.status = 'empty'; renderPodium(); planujObrot(); return; }
 
     var m = t2.map;
-    podium.rows = t2.rows.slice(0, 3).map(function (r, i) {
+    /* LMU: podium klasy głównej (LMGT3), goście z LMP2 się nie mieszają */
+    var kl = D.klasy(t2);
+    var wiersze = kl ? D.wierszeKlasy(t2, kl[0]) : t2.rows;
+    podium.rows = wiersze.slice(0, 3).map(function (r, i) {
       return {
         pos:    i + 1,
         driver: m.driver !== -1 ? r[m.driver] : '',
@@ -656,8 +667,24 @@ function wczytajPodium (id) {
     renderOstatni();
     planujObrot();
     dociagnijNastepna();
+  }
+
+  if (gotowe) {
+    podiumDane[id2] = gotowe;
+    pokaz(gotowe);
+  } else {
+    /* nowa seria: puste kafelki, zanim przyjdą dane */
+    podium.rows = []; podium.round = ''; podium.status = 'loading';
+    renderPodium();
+  }
+  if (swieze) return;
+
+  D.pobierz(ch).then(function (data) {
+    var stare = podiumDane[id2];
+    podiumDane[id2] = data;
+    if (!stare || String(stare.updated) !== String(data.updated)) pokaz(data);
   }).catch(function (err) {
-    if (nr !== podiumZapytanie) return;
+    if (nr !== podiumZapytanie || gotowe) return; // z pamięci coś już jest — zostaje
     podium.status = (err && err.kod === 'nosource') ? 'nosource' : 'error';
     if (window.console && podium.status === 'error') console.warn('[podium]', err);
     renderPodium();

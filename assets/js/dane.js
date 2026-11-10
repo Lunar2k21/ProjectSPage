@@ -45,8 +45,6 @@ function jestDywizja (v) {
   return !!x && !NIE_DYWIZJA.test(x);
 }
 
-function norm (v) { return PS.normalize(v); }
-
 /* Zwraca {pos, driver, time, ...} => indeks kolumny albo -1. */
 function resolveColumns (headers, rows) {
   var used = {}, map = {};
@@ -212,7 +210,55 @@ function pobierz (ch) {
     });
   }
 
-  return fetchJson(src.url);
+  return fetchJson(src.url).then(function (data) {
+    if (data && data.error && !(data.sheets || []).length) throw new Error(data.error);
+    doPamieci(ch, data);
+    return data;
+  });
+}
+
+/* ------------------------------------------------------------------
+   PAMIĘĆ PRZEGLĄDARKI
+   Apps Script potrafi odpowiadać kilka sekund. Ostatnie dane każdej
+   serii trzymamy więc w przeglądarce czytelnika: przy następnej wizycie
+   tabela pojawia się od razu, a świeże dane podmieniają ją po cichu,
+   gdy tylko przyjdą (i tylko wtedy, gdy coś się zmieniło).
+------------------------------------------------------------------ */
+var PAMIEC = 'ps-dane-';
+var PAMIEC_WIEK = 14 * 24 * 3600 * 1000;      // starsze niż dwa tygodnie — nie pokazujemy
+
+function zPamieci (ch) {
+  var src = ch && ch.source;
+  if (!src || !src.url) return null;
+  try {
+    var o = JSON.parse(window.localStorage.getItem(PAMIEC + ch.id) || 'null');
+    if (!o || o.u !== src.url || !o.d || !o.d.sheets || Date.now() - o.t > PAMIEC_WIEK) return null;
+    o.d.zPamieci = o.t;                       // kiedy te dane przyszły z arkusza
+    return o.d;
+  } catch (e) { return null; }
+}
+
+function doPamieci (ch, data) {
+  if (!ch || !ch.id || !data || data.demo || !(data.sheets || []).length) return;
+  try {
+    window.localStorage.setItem(PAMIEC + ch.id,
+      JSON.stringify({ u: ch.source.url, t: Date.now(), d: data }));
+  } catch (e) {
+    try { window.localStorage.removeItem(PAMIEC + ch.id); } catch (e2) {}
+  }
+}
+
+/* Najpierw to, co jest w pamięci (od razu), potem świeże dane z arkusza.
+   gdyDane(data, zPamieci) może więc zostać wywołane dwa razy; drugi raz
+   tylko wtedy, gdy znacznik zmiany się różni. Zwraca obietnicę świeżych
+   danych — odrzuconą, gdy arkusz nie odpowiedział. */
+function pobierzSzybko (ch, gdyDane) {
+  var stare = zPamieci(ch);
+  if (stare) gdyDane(stare, true);
+  return pobierz(ch).then(function (data) {
+    if (!stare || String(stare.updated) !== String(data.updated)) gdyDane(data, false);
+    return data;
+  });
 }
 
 /* Zakładki widoczne dla użytkownika (te z podkreśleniem są techniczne). */
@@ -253,10 +299,13 @@ function ostatniaZWynikami (lista) {
   return wybor;
 }
 
+/* Zakładka rundy: „3. FIN” (WRC) albo „R3 Japonia” (LMU). */
+var JEST_RUNDA = /^\s*(\d+\s*[.)]|r\s?\d+\b)/i;
+
 function ostatniaRunda (data) {
   var rundy = [], inne = [];
   zakladki(data).forEach(function (s) {
-    (/^\s*\d+\s*[.)]/.test(String(s.name || '')) ? rundy : inne).push(s);
+    (JEST_RUNDA.test(String(s.name || '')) ? rundy : inne).push(s);
   });
   return ostatniaZWynikami(rundy) || ostatniaZWynikami(inne);
 }
@@ -267,7 +316,7 @@ function ostatniaRunda (data) {
 function autaKierowcow (data) {
   var mapa = {};
   zakladki(data).forEach(function (s) {
-    if (!/^\s*\d+\s*[.)]/.test(String(s.name || ''))) return;   // tylko rundy („2. GRE”)
+    if (!JEST_RUNDA.test(String(s.name || ''))) return;   // tylko rundy („2. GRE”, „R2 Stany…”)
     var t2 = przygotuj(s);
     var m = t2.map;
     if (m.driver === -1 || m.car === -1) return;
@@ -279,7 +328,84 @@ function autaKierowcow (data) {
   return mapa;
 }
 
+/* ------------------------------------------------------------------
+   KLASY WYŚCIGOWE (LMU)
+   Kolumna „Klasa” z wartościami LMGT3, LMP2… to nie dywizje jednej
+   klasyfikacji, tylko osobne klasyfikacje: LMP2 nie może być „pierwszy”
+   przed LMGT3. Rozpoznajemy to po samych wartościach — dywizje WRC
+   (PSR1, Rookie…) zostają po staremu.
+------------------------------------------------------------------ */
+var KLASA_RE = /^(lm\s?gt\s?[34e]|gt\s?[34]|gte(\s?(pro|am))?|lmp\s?[1-3](\s?elms)?|hypercar|lmh|lmdh)$/i;
+
+/* Lista klas w zakładce (najliczniejsza pierwsza = główna) albo null. */
+function klasy (t2) {
+  var m = t2 && t2.map;
+  if (!m || m.div === -1) return null;
+  var ile = {}, lista = [];
+  for (var i = 0; i < t2.rows.length; i++) {
+    var v = String(t2.rows[i][m.div] || '').trim();
+    if (!jestDywizja(v)) continue;
+    if (!KLASA_RE.test(v)) return null;
+    if (!(v in ile)) { ile[v] = 0; lista.push(v); }
+    ile[v]++;
+  }
+  if (lista.length < 2) return null;
+  var glowna = (CFG.klasaGlowna || '').toLowerCase();
+  return lista.sort(function (a, b) {
+    return (b.toLowerCase() === glowna) - (a.toLowerCase() === glowna) || ile[b] - ile[a] || a.localeCompare(b);
+  });
+}
+
+/* Wiersze jednej klasy z pozycją w tej klasie (pole .poz).
+   Klasyfikacja (punkty, bez czasu): kolejność wg punktów, remis = ta
+   sama pozycja. Runda: kolejność z arkusza, numeracja od 1 w klasie,
+   „—” (nie ukończył) zostaje. */
+function wierszeKlasy (t2, klasa) {
+  var m = t2.map;
+  var rows = t2.rows.filter(function (r) { return norm(r[m.div]) === norm(klasa); });
+
+  if (m.points !== -1 && m.time === -1) {
+    var pkt = function (r) {
+      var x = parseFloat(String(r[m.points] || '').replace(',', '.'));
+      return isNaN(x) ? -1 : x;
+    };
+    var oc = rows.map(function (r, i) { return { r: r, i: i, p: pkt(r) }; })
+      .sort(function (a, b) { return b.p - a.p || a.i - b.i; });
+    return oc.map(function (o) {
+      var c = o.r.slice();
+      c.poz = String(1 + oc.filter(function (x) { return x.p > o.p; }).length);
+      return c;
+    });
+  }
+
+  /* Arkusz z eksportu LMU ma już pozycje w klasie (zaczynają się od 1) —
+     wtedy je zostawiamy; pozycje w całej stawce numerujemy od nowa. */
+  var org = function (r) { return m.pos !== -1 ? String(r[m.pos] || '').trim() : ''; };
+  var liczbowe = rows.map(org).filter(function (v) { return /^\d+\.?$/.test(v); });
+  var wKlasie = liczbowe.length && parseInt(liczbowe[0], 10) === 1;
+  var n = 0;
+  return rows.map(function (r) {
+    var c = r.slice(), o = org(r);
+    c.poz = (!o || /^\d+\.?$/.test(o)) ? (wKlasie && o ? o.replace('.', '') : String(++n)) : o;
+    return c;
+  });
+}
+
+/* Zdjęcie na podium. Gdy seria ma zdjęcia przypisane do aut (LMU),
+   a tego auta wśród nich nie ma (np. gościnna Oreca z LMP2), lepszy
+   jest gładki kafelek niż losowe, cudze auto. */
+function zdjecieAuta (kto, seria, auto, zespol, zajete) {
+  var tekst = [auto || '', zespol || ''].join(' ');
+  var pp = (CFG.podiumPhotos || {})[seria];
+  if (seria === 'lmu' && pp && pp.auta && typeof PS.dopasuj === 'function' && String(auto || '').trim() &&
+      !PS.dopasuj(pp.auta, tekst)) return null;
+  return PS.photoFile(kto, seria, tekst, zajete);
+}
+
 PS.dane = {
+  zdjecieAuta: zdjecieAuta,
+  klasy: klasy,
+  wierszeKlasy: wierszeKlasy,
   autaKierowcow: autaKierowcow,
   jestDywizja: jestDywizja,
   resolveColumns: resolveColumns,
@@ -288,6 +414,8 @@ PS.dane = {
   parseCsv: parseCsv,
   fetchJson: fetchJson,
   pobierz: pobierz,
+  pobierzSzybko: pobierzSzybko,
+  zPamieci: zPamieci,
   champ: champ,
   zakladki: zakladki,
   maWynik: maWynik,

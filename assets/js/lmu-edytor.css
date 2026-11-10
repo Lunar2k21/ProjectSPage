@@ -1,0 +1,52 @@
+
+/* ---------------------------------------------------------------------
+   LMU — EDYTOR WYNIKÓW (zakładka „Edytor” na lmu.html)
+--------------------------------------------------------------------- */
+.lmu-ed__pasek {
+  display: flex; gap: 16px 24px; align-items: flex-start; justify-content: space-between;
+  flex-wrap: wrap; margin: 0 0 22px; padding: 14px 18px;
+  border: 1px solid var(--line, rgba(174, 182, 198, .18));
+  border-left: 3px solid var(--orange, #F04E23);
+  background: var(--panel, rgba(17, 26, 42, .6));
+}
+.lmu-ed__pasek p { margin: 0; max-width: 78ch; font-size: .9rem; line-height: 1.55; opacity: .85; }
+.lmu-ed__reset {
+  flex: none; padding: 9px 16px; border: 1px solid currentColor; background: none; color: inherit;
+  font: 600 .74rem/1 var(--font-mono, "IBM Plex Mono", monospace); letter-spacing: .08em; text-transform: uppercase;
+  cursor: pointer;
+}
+.lmu-ed__reset:not(:disabled):hover { color: var(--orange, #F04E23); }
+.lmu-ed__reset:disabled { opacity: .35; cursor: default; }
+
+.lmu-ed { overflow-x: auto; }
+.lmu-ed__tab { min-width: 1180px; }
+.lmu-ed__tab td { padding-top: 6px; padding-bottom: 6px; vertical-align: middle; }
+.lmu-ed__tab tr.is-zm td:first-child { box-shadow: inset 3px 0 0 var(--orange, #F04E23); }
+
+.lmu-ed__in {
+  width: 100%; min-width: 0; padding: 6px 8px; box-sizing: border-box;
+  border: 1px solid var(--line, rgba(174, 182, 198, .22)); border-radius: 0;
+  background: rgba(127, 127, 127, .07); color: inherit;
+  font: inherit; font-size: .88rem; font-variant-numeric: tabular-nums;
+}
+.lmu-ed__in:focus { outline: none; border-color: var(--orange, #F04E23); background: rgba(127, 127, 127, .14); }
+.lmu-ed__in::placeholder { opacity: .4; }
+.lmu-ed__in.is-zm {
+  border-color: var(--amber, #E9B949);
+  background: color-mix(in srgb, var(--amber, #E9B949) 14%, transparent);
+}
+.lmu-ed__in--xs { width: 4.4em; text-align: right; }
+.lmu-ed__in--s  { width: 8.6em; text-align: right; }
+.lmu-ed__in--m  { width: 10em; }
+.lmu-ed__in--l  { width: 13em; }
+select.lmu-ed__in { width: auto; padding-right: 4px; cursor: pointer; }
+select.lmu-ed__in option { color: #111; }
+
+.lmu-ed__ruch { white-space: nowrap; width: 1%; }
+.lmu-ed__ruch button {
+  width: 26px; height: 24px; padding: 0; margin-right: 2px;
+  border: 1px solid var(--line, rgba(174, 182, 198, .22)); background: none; color: inherit;
+  font-size: .62rem; line-height: 1; cursor: pointer;
+}
+.lmu-ed__ruch button:not(:disabled):hover { border-color: var(--orange, #F04E23); color: var(--orange, #F04E23); }
+.lmu-ed__ruch button:disabled { opacity: .2; cursor: default; }
