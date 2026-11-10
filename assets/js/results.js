@@ -377,7 +377,8 @@ function renderPodium (t2, rows) {
 
   order.forEach(function (idx) {
     var r = top[idx];
-    if (!r) return;
+    /* mniej niż trzy miejsca (np. jedno auto LMP2) — zwycięzca na środku */
+    if (!r) { html += '<div class="pod pod--puste" aria-hidden="true"></div>'; return; }
 
     var pos  = idx + 1;
     var car  = autoWiersza(t2, r);
@@ -406,7 +407,15 @@ function renderPodium (t2, rows) {
 
   box.innerHTML = html;
   PS.guardImages(box);
+
+  /* wjazd kafelków przy zmianie serii, zakładki albo klasy */
+  var klucz = [state.champ, state.tab, state.division].join('|');
+  if (klucz !== ostatniePodium) {
+    if (ostatniePodium) D.wjazd(box.querySelectorAll('.pod:not(.pod--puste)'));
+    ostatniePodium = klucz;
+  }
 }
+var ostatniePodium = '';
 
 function renderTable (t2, rows) {
   var wrap = $('#tableWrap');

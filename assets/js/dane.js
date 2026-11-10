@@ -288,15 +288,26 @@ function maWynik (t2, r) {
    (nazwa zaczyna się od numeru, np. „3. FIN”), a dopiero potem
    wśród pozostałych zakładek, żeby nie pokazać klasyfikacji
    generalnej zamiast ostatniego rajdu. */
-function ostatniaZWynikami (lista) {
-  var wybor = null;
+/* Numer rundy z nazwy zakładki: „4. ESP” -> 4, „R3 Japonia” -> 3. */
+function numerRundy (nazwa) {
+  var m = /^\s*r?\s?(\d+)/i.exec(String(nazwa || ''));
+  return m ? parseInt(m[1], 10) : 0;
+}
+
+/* Wśród rund wygrywa ta z najwyższym numerem (nie ostatnia z lewej na
+   prawo — kolejność zakładek w arkuszu bywa dowolna), a zakładki
+   testowe („Test – Monte-Carlo”) tylko wtedy, gdy nie ma nic innego. */
+function ostatniaZWynikami (lista, wgNumeru) {
+  var wybor = null, test = null;
   for (var i = 0; i < lista.length; i++) {
     var t2 = przygotuj(lista[i]);
     if (t2.map.driver === -1 || !t2.rows.length) continue;
     if (!t2.rows.some(function (r) { return maWynik(t2, r); })) continue;
+    if (/\btest/i.test(t2.name)) { test = t2; continue; }
+    if (wgNumeru && wybor && numerRundy(t2.name) < numerRundy(wybor.name)) continue;
     wybor = t2;
   }
-  return wybor;
+  return wybor || test;
 }
 
 /* Zakładka rundy: „3. FIN” (WRC) albo „R3 Japonia” (LMU). */
@@ -307,7 +318,7 @@ function ostatniaRunda (data) {
   zakladki(data).forEach(function (s) {
     (JEST_RUNDA.test(String(s.name || '')) ? rundy : inne).push(s);
   });
-  return ostatniaZWynikami(rundy) || ostatniaZWynikami(inne);
+  return ostatniaZWynikami(rundy, true) || ostatniaZWynikami(inne);
 }
 
 /* Auto każdego kierowcy z ostatniej rozegranej rundy, w której jechał.
@@ -402,7 +413,58 @@ function zdjecieAuta (kto, seria, auto, zespol, zajete) {
   return PS.photoFile(kto, seria, tekst, zajete);
 }
 
+/* ------------------------------------------------------------------
+   PODIUM — wygląd wspólny dla strony głównej i wyników
+   Kilka reguł dokładanych z kodu, żeby działały niezależnie od wersji
+   style.css na serwerze: puste miejsce na podium, przyciski serii
+   z paskiem odliczania i wjazd kafelków.
+------------------------------------------------------------------ */
+var STYL_PODIUM =
+  '.pod.pod--puste{visibility:hidden;pointer-events:none;border-color:transparent;background:none}' +
+  '@media (max-width:860px){.pod.pod--puste{display:none}}' +
+  '.podchamps{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 20px}' +
+  '.podchamps[hidden]{display:none}' +
+  '.podchamps .champ{position:relative;display:inline-flex;align-items:center;gap:9px;min-height:0;' +
+    'padding:10px 16px 12px;border:1px solid rgba(174,182,198,.22);background:rgba(17,26,42,.55);color:inherit;' +
+    'font:600 .72rem/1 var(--mono,"IBM Plex Mono",ui-monospace,monospace);letter-spacing:.12em;text-transform:uppercase;' +
+    'cursor:pointer;overflow:hidden;opacity:.62;transition:opacity .2s,border-color .2s}' +
+  '.podchamps .champ:hover{opacity:.9}' +
+  '.podchamps .champ.is-on{opacity:1;border-color:var(--kolor,#F04E23)}' +
+  '.podchamps .champ small{display:none}' +
+  '.podchamps .champ__kropka{flex:none;width:7px;height:7px;border-radius:50%;background:var(--kolor,#F04E23)}' +
+  '.podchamps .champ__czas{position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--kolor,#F04E23);' +
+    'transform-origin:0 50%;transform:scaleX(0);animation:psPodCzas var(--czas,9000ms) linear forwards}' +
+  '.podchamps.is-pauza .champ__czas{animation-play-state:paused}' +
+  '@keyframes psPodCzas{to{transform:scaleX(1)}}' +
+  '@media (prefers-reduced-motion:reduce){.podchamps .champ__czas{display:none}}';
+
+(function () {
+  if (document.getElementById('psStylPodium')) return;
+  var st = document.createElement('style');
+  st.id = 'psStylPodium';
+  st.textContent = STYL_PODIUM;
+  (document.head || document.documentElement).appendChild(st);
+})();
+
+/* Kafelki wjeżdżają po kolei (2 – 1 – 3), podpis rundy przenika. */
+function wjazd (kafelki, podpis) {
+  if (!kafelki || !kafelki.length || !kafelki[0].animate) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  [].forEach.call(kafelki, function (el, i) {
+    el.animate([
+      { opacity: 0, transform: 'translateY(18px) scale(.985)' },
+      { opacity: 1, transform: 'none' }
+    ], { duration: 520, delay: i * 90, easing: 'cubic-bezier(.2,.75,.25,1)', fill: 'backwards' });
+    var foto = el.querySelector('.pod__img');
+    if (foto) foto.animate([{ transform: 'scale(1.06)' }, { transform: 'scale(1)' }],
+                           { duration: 900, delay: i * 90, easing: 'cubic-bezier(.2,.75,.25,1)' });
+  });
+  if (podpis && podpis.animate) podpis.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 400 });
+}
+
 PS.dane = {
+  wjazd: wjazd,
+  numerRundy: numerRundy,
   zdjecieAuta: zdjecieAuta,
   klasy: klasy,
   wierszeKlasy: wierszeKlasy,

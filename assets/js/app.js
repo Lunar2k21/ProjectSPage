@@ -498,7 +498,9 @@ function renderPodium () {
 
   order.forEach(function (idx) {
     var r = rows[idx];
-    if (!r) return;
+    /* mniej niż trzy miejsca (np. jedno auto LMP2) — puste miejsce
+       zostaje, więc zwycięzca stoi na środku, jak na podium */
+    if (!r) { html += '<div class="pod pod--puste" aria-hidden="true"></div>'; return; }
 
     var media = PS.photoImg(zdjecia[idx]);
     var time  = PS.czasLadny(r.time) || (CFG.results || {}).emptyTime || '--:--.---';
@@ -518,6 +520,13 @@ function renderPodium () {
 
   box.innerHTML = html;
   PS.guardImages(box);
+
+  /* Wjazd kafelków przy zmianie serii albo klasy (nie przy odświeżeniu). */
+  var klucz = podium.status === 'loading' ? '' : kluczSlajdu(podium.champ, podium.klasa);
+  if (klucz && klucz !== ostatnioPokazany) {
+    if (ostatnioPokazany) PS.dane.wjazd(box.querySelectorAll('.pod:not(.pod--puste)'), runda);
+    ostatnioPokazany = klucz;
+  }
 }
 
 /* ------------------------------------------------------------------
@@ -526,7 +535,8 @@ function renderPodium () {
    i pokazujemy z niej trzy pierwsze miejsca. Ten sam kod czyta arkusz
    co podstrona wyników, więc obie strony nie mogą się rozjechać.
 ------------------------------------------------------------------ */
-var podium = { rows: [], round: '', demo: false, status: 'idle', champ: '' };
+var podium = { rows: [], round: '', demo: false, status: 'idle', champ: '', klasa: '' };
+var ostatnioPokazany = '';   // klucz slajdu z ostatniego rysowania — do animacji
 var KLUCZ_PODIUM = 'ps-podium';
 var podiumDane = {};        // pobrane już arkusze — przełączanie nie pyta drugi raz
 var podiumZapytanie = 0;
@@ -551,25 +561,71 @@ function startowaSeria () {
   return ids.indexOf(dom) > -1 ? dom : (ids[0] || dom);
 }
 
-function renderPodChamps () {
+/* ------------------------------------------------------------------
+   PODIUM — SLAJDY
+   Slajd = seria albo, gdy w ostatniej rundzie jechało kilka klas
+   (LMU: LMGT3 + goście z LMP2), osobno każda klasa tej serii.
+------------------------------------------------------------------ */
+function krotkaKlasa (k) {
+  return String(k || '').replace(/^LM(?=GT)/i, '').replace(/\s*ELMS$/i, '');
+}
+
+function slajdy () {
+  var D = PS.dane, out = [];
+  mistrzostwaZWynikami().forEach(function (c) {
+    var data = podiumDane[c.id];
+    var t2 = data && D.ostatniaRunda(data);
+    var kl = t2 && D.klasy(t2);
+    if (kl) {
+      kl.forEach(function (k) {
+        out.push({ champ: c.id, klasa: k, label: txt(c.label) + ' · ' + krotkaKlasa(k) });
+      });
+    } else {
+      out.push({ champ: c.id, klasa: '', label: txt(c.label) });
+    }
+  });
+  return out;
+}
+
+function kluczSlajdu (champ, klasa) { return champ + '|' + (klasa || ''); }
+
+/* Przyciski serii nad podium; pasek pod aktywnym odlicza czas do zmiany.
+   Gdy strona nie ma na nie miejsca w HTML, dokładamy je sami. */
+function pudelkoSerii () {
   var box = $('#podChamps');
+  if (box) return box;
+  var pod = $('#podium');
+  if (!pod || !pod.parentNode) return null;
+  box = document.createElement('div');
+  box.id = 'podChamps';
+  box.setAttribute('role', 'tablist');
+  pod.parentNode.insertBefore(box, pod);
+  return box;
+}
+
+function renderPodChamps () {
+  var box = pudelkoSerii();
   if (!box) return;
-  var lista = mistrzostwaZWynikami();
+  box.classList.add('champs', 'podchamps');
+  var lista = slajdy();
   box.hidden = lista.length < 2;
   if (box.hidden) return;
-  box.innerHTML = lista.map(function (c) {
-    var on = c.id === podium.champ;
-    /* pasek pod aktywną serią odlicza czas do przełączenia */
-    var pasek = on && okresObrotu() ? '<span class="champ__czas" style="--czas:' + okresObrotu() + 'ms"></span>' : '';
+  var teraz = kluczSlajdu(podium.champ, podium.klasa);
+  var ms = okresObrotu();
+  box.innerHTML = lista.map(function (s) {
+    var on = kluczSlajdu(s.champ, s.klasa) === teraz;
+    var pasek = on && ms ? '<span class="champ__czas" style="--czas:' + ms + 'ms"></span>' : '';
+    var kolor = PS.kolorSerii ? PS.kolorSerii(s.champ) : '';
     return '<button type="button" class="champ' + (on ? ' is-on' : '') + '" role="tab"' +
-           ' aria-selected="' + on + '" data-pod="' + esc(c.id) + '" style="--kolor:' + PS.kolorSerii(c.id) + '">' +
-           '<i class="champ__kropka" aria-hidden="true"></i>' + esc(c.label) + pasek + '</button>';
+           ' aria-selected="' + on + '" data-pod="' + esc(s.champ) + '" data-klasa="' + esc(s.klasa) + '"' +
+           (kolor ? ' style="--kolor:' + kolor + '"' : '') + '>' +
+           '<i class="champ__kropka" aria-hidden="true"></i>' + esc(s.label) + pasek + '</button>';
   }).join('');
   box.classList.toggle('is-pauza', obrotPauza);
 }
 
 /* ------------------------------------------------------------------
-   PODIUM — przełączanie serii co kilka sekund
+   PODIUM — przełączanie co kilka sekund
    Bez ruchu, gdy czytelnik prosi o ograniczenie animacji, gdy kursor
    albo fokus jest nad podium i gdy karta przeglądarki jest w tle.
 ------------------------------------------------------------------ */
@@ -577,7 +633,7 @@ var obrotTimer = null, obrotPauza = false, dociagane = {};
 
 function okresObrotu () {
   var ms = CFG.podiumRotacja;
-  if (ms === 0 || reduceMotion || mistrzostwaZWynikami().length < 2) return 0;
+  if (ms === 0 || reduceMotion || slajdy().length < 2) return 0;
   return ms || 9000;
 }
 
@@ -587,26 +643,29 @@ function planujObrot () {
   if (!ms || obrotPauza) return;
   obrotTimer = setTimeout(function () {
     if (document.hidden) { renderPodChamps(); planujObrot(); return; }
-    var ids = mistrzostwaZWynikami().map(function (c) { return c.id; });
-    wczytajPodium(ids[(ids.indexOf(podium.champ) + 1) % ids.length]);
+    var lista = slajdy();
+    var teraz = kluczSlajdu(podium.champ, podium.klasa), i = 0;
+    lista.forEach(function (s, j) { if (kluczSlajdu(s.champ, s.klasa) === teraz) i = j; });
+    var s = lista[(i + 1) % lista.length];
+    wczytajPodium(s.champ, s.klasa);
   }, ms);
 }
 
-/* Dane następnej serii pobieramy z wyprzedzeniem — przełączenie jest
-   wtedy natychmiastowe, bez pustych kafelków. */
-function dociagnijNastepna () {
+/* Dane wszystkich serii pobieramy od razu w tle — wtedy wiadomo, ile
+   jest slajdów (czy LMP2 jechało), a przełączenie jest natychmiastowe. */
+function dociagnijWszystkie () {
   var D = PS.dane;
-  var ids = mistrzostwaZWynikami().map(function (c) { return c.id; });
-  var nast = ids[(ids.indexOf(podium.champ) + 1) % ids.length];
-  if (!nast || nast === podium.champ || !okresObrotu()) return;
-  if (podiumDane[nast] && !podiumDane[nast].zPamieci) return;
-  var ch = D.champ(nast);
-  if (!ch) return;
-  if (!podiumDane[nast]) { var p = D.zPamieci(ch); if (p) podiumDane[nast] = p; }
-  if (dociagane[nast]) return;
-  dociagane[nast] = true;
-  D.pobierz(ch).then(function (data) { podiumDane[nast] = data; })
-    .catch(function () {}).then(function () { dociagane[nast] = false; });
+  mistrzostwaZWynikami().forEach(function (c) {
+    if (podiumDane[c.id] && !podiumDane[c.id].zPamieci) return;
+    if (!podiumDane[c.id]) { var p = D.zPamieci(c); if (p) podiumDane[c.id] = p; }
+    if (dociagane[c.id] || c.id === podium.champ) return;   // bieżącą pobiera wczytajPodium
+    dociagane[c.id] = true;
+    D.pobierz(c).then(function (data) {
+      podiumDane[c.id] = data;
+      renderPodChamps();
+    }).catch(function () {}).then(function () { dociagane[c.id] = false; });
+  });
+  renderPodChamps();
 }
 
 (function () {
@@ -624,7 +683,7 @@ function dociagnijNastepna () {
   sekcja.addEventListener('focusout', function (e) { if (!sekcja.contains(e.relatedTarget)) pauza(false); });
 })();
 
-function wczytajPodium (id) {
+function wczytajPodium (id, klasa) {
   var D = PS.dane;
   if (!D) return;
 
@@ -645,12 +704,13 @@ function wczytajPodium (id) {
     var t2 = D.ostatniaRunda(data);
     podium.demo = !!data.demo;
 
-    if (!t2) { podium.rows = []; podium.round = ''; podium.status = 'empty'; renderPodium(); planujObrot(); return; }
+    if (!t2) { podium.rows = []; podium.round = ''; podium.klasa = ''; podium.status = 'empty'; renderPodium(); planujObrot(); return; }
 
     var m = t2.map;
-    /* LMU: podium klasy głównej (LMGT3), goście z LMP2 się nie mieszają */
+    /* LMU: każda klasa ma własne podium (osobny slajd), bez mieszania */
     var kl = D.klasy(t2);
-    var wiersze = kl ? D.wierszeKlasy(t2, kl[0]) : t2.rows;
+    podium.klasa = kl ? (kl.indexOf(klasa) > -1 ? klasa : kl[0]) : '';
+    var wiersze = kl ? D.wierszeKlasy(t2, podium.klasa) : t2.rows;
     podium.rows = wiersze.slice(0, 3).map(function (r, i) {
       return {
         pos:    i + 1,
@@ -666,7 +726,7 @@ function wczytajPodium (id) {
     renderPodium();
     renderOstatni();
     planujObrot();
-    dociagnijNastepna();
+    dociagnijWszystkie();
   }
 
   if (gotowe) {
@@ -674,7 +734,7 @@ function wczytajPodium (id) {
     pokaz(gotowe);
   } else {
     /* nowa seria: puste kafelki, zanim przyjdą dane */
-    podium.rows = []; podium.round = ''; podium.status = 'loading';
+    podium.rows = []; podium.round = ''; podium.klasa = klasa || ''; podium.status = 'loading';
     renderPodium();
   }
   if (swieze) return;
@@ -695,10 +755,10 @@ function wczytajPodium (id) {
 document.addEventListener('click', function (e) {
   var b = e.target.closest && e.target.closest('[data-pod]');
   if (!b) return;
-  var id = b.getAttribute('data-pod');
-  if (id === podium.champ) return;
+  var id = b.getAttribute('data-pod'), klasa = b.getAttribute('data-klasa') || '';
+  if (id === podium.champ && klasa === (podium.klasa || '')) return;
   try { localStorage.setItem(KLUCZ_PODIUM, id); } catch (err) {}
-  wczytajPodium(id);
+  wczytajPodium(id, klasa);
 });
 
 /* ------------------------------------------------------------------
